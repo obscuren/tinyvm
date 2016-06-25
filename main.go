@@ -1,8 +1,25 @@
+// Copyright 2016 Jeffrey Wilcke
+//
+// go-ethereum is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// go-ethereum is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with go-ethereum. If not, see <http://www.gnu.org/licenses/>.
+
 package main
 
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
+	"os"
 
 	"github.com/obscuren/tinyvm/asm"
 	"github.com/obscuren/tinyvm/vm"
@@ -18,7 +35,18 @@ func main() {
 
 	fmt.Println("TinyVM", vm.VersionString, "- (c) Jeffrey Wilcke")
 
-	code := asm.Parse(fibanocci)
+	var code []byte
+	if len(flag.Args()) > 0 {
+		var err error
+		code, err = ioutil.ReadFile(flag.Args()[0])
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		code = asm.Parse(string(code))
+	} else {
+		code = asm.Parse(fibanocci)
+	}
 	if *printCode {
 		fmt.Printf("%x\n", code)
 	}
@@ -67,11 +95,6 @@ const (
 		call 	nop
 	`
 
-	minJmp = `
-		jmp 	end
-	end:
-	`
-
 	example = `
 		mov 	r0 0
 
@@ -91,6 +114,11 @@ const (
 	not_happening:
 		eq 	1 0
 		jmpi 	not_happening
+	`
+
+	mov = `
+	mov r4 5
+	mov r3 1
 	`
 
 	// r0 = c

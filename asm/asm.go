@@ -44,7 +44,7 @@ func Parse(code string) []byte {
 		default:
 			var (
 				splitStr = strings.Split(line, " ")
-				op       = OpString[splitStr[0]]
+				op       = OpString[strings.TrimSpace(splitStr[0])]
 			)
 			parsedCode = append(parsedCode, byte(op))
 			pc++
