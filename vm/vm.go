@@ -5,6 +5,8 @@ import (
 	"encoding/binary"
 	"fmt"
 	"unicode"
+
+	"github.com/obscuren/tinyvm/asm"
 )
 
 const (
@@ -20,8 +22,8 @@ var VersionString = fmt.Sprintf("%d.%d.%d", Major, Minor, Patch)
 // VM is the Tiny Virtual Machine data structure. It contains all
 // registers and data pointers.
 type VM struct {
-	registers [MaxRegister]int64 // general purpose registers
-	memory    map[uint64]int64   // memory addressed by pointer
+	registers [asm.MaxRegister]int64 // general purpose registers
+	memory    map[uint64]int64       // memory addressed by pointer
 }
 
 // New returns a new initialised VM.
@@ -60,19 +62,19 @@ func (vm *VM) Exec(code []byte) ([]byte, error) {
 	// loop, read and execute each op code
 	pc := vm.registers[0]
 	for int(pc) < len(code) {
-		switch op := Op(code[pc]); op {
-		case Mov:
+		switch op := asm.Op(code[pc]); op {
+		case asm.Mov:
 			typl, loc, typv, locv := code[pc+1], code[pc+2], code[pc+3], code[pc+4]
 			vm.Set(typl, loc, vm.Get(typv, locv))
 
 			pc += 5
-		case Ret:
+		case asm.Ret:
 			typ, loc := code[pc+1], code[pc+2]
 			buffer := new(bytes.Buffer)
 			binary.Write(buffer, binary.BigEndian, vm.Get(typ, loc))
 
 			return buffer.Bytes(), nil
-		case Add:
+		case asm.Add:
 			typt, t := code[pc+1], code[pc+2]
 			typa, a := code[pc+3], code[pc+4]
 			typb, b := code[pc+5], code[pc+6]
@@ -80,7 +82,7 @@ func (vm *VM) Exec(code []byte) ([]byte, error) {
 			vm.Set(typt, t, vm.Get(typa, a)+vm.Get(typb, b))
 
 			pc += 7
-		case Sub:
+		case asm.Sub:
 			typt, t := code[pc+1], code[pc+2]
 			typa, a := code[pc+3], code[pc+4]
 			typb, b := code[pc+5], code[pc+6]
@@ -88,7 +90,7 @@ func (vm *VM) Exec(code []byte) ([]byte, error) {
 			vm.Set(typt, t, vm.Get(typa, a)-vm.Get(typb, b))
 
 			pc += 7
-		case Jmpi:
+		case asm.Jmpi:
 			typp, p := code[pc+1], code[pc+2]
 			if cond {
 				pc = vm.Get(typp, p)
@@ -96,7 +98,7 @@ func (vm *VM) Exec(code []byte) ([]byte, error) {
 				pc += 3
 			}
 			cond = false // set the condition back to false after reading
-		case Jmpn:
+		case asm.Jmpn:
 			typp, p := code[pc+1], code[pc+2]
 			if !cond {
 				pc = vm.Get(typp, p)
@@ -104,54 +106,54 @@ func (vm *VM) Exec(code []byte) ([]byte, error) {
 				pc += 3
 			}
 			cond = false // set the condition back to false after reading
-		case Jmp:
+		case asm.Jmp:
 			pc = vm.Get(code[pc+1], code[pc+2])
-		case Lt:
+		case asm.Lt:
 			typa, a, typb, b := code[pc+1], code[pc+2], code[pc+3], code[pc+4]
 			if vm.Get(typa, a) < vm.Get(typb, b) {
 				cond = true
 			}
 
 			pc += 5
-		case Gt:
+		case asm.Gt:
 			typa, a, typb, b := code[pc+1], code[pc+2], code[pc+3], code[pc+4]
 			if vm.Get(typa, a) > vm.Get(typb, b) {
 				cond = true
 			}
 
 			pc += 5
-		case Lteq:
+		case asm.Lteq:
 			typa, a, typb, b := code[pc+1], code[pc+2], code[pc+3], code[pc+4]
 			if vm.Get(typa, a) <= vm.Get(typb, b) {
 				cond = true
 			}
 
 			pc += 5
-		case Gteq:
+		case asm.Gteq:
 			typa, a, typb, b := code[pc+1], code[pc+2], code[pc+3], code[pc+4]
 			if vm.Get(typa, a) >= vm.Get(typb, b) {
 				cond = true
 			}
 
 			pc += 5
-		case Eq:
+		case asm.Eq:
 			typa, a, typb, b := code[pc+1], code[pc+2], code[pc+3], code[pc+4]
 			if vm.Get(typa, a) == vm.Get(typb, b) {
 				cond = true
 			}
 
 			pc += 5
-		case Nq:
+		case asm.Nq:
 			typa, a, typb, b := code[pc+1], code[pc+2], code[pc+3], code[pc+4]
 			if vm.Get(typa, a) != vm.Get(typb, b) {
 				cond = true
 			}
 
 			pc += 5
-		case Nop:
+		case asm.Nop:
 			pc++
 
-		case Dbg:
+		case asm.Dbg:
 			value := vm.Get(code[pc+1], code[pc+2])
 
 			fmt.Println("dbg:", value)
@@ -169,7 +171,7 @@ func (vm *VM) Exec(code []byte) ([]byte, error) {
 func (vm *VM) Stats() {
 	fmt.Println("regs:")
 	for register, value := range vm.registers {
-		fmt.Println(RegToString[Reg(register)], ":", value)
+		fmt.Println(asm.RegToString[asm.Reg(register)], ":", value)
 	}
 
 	fmt.Println()

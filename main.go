@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/obscuren/tinyvm/asm"
 	"github.com/obscuren/tinyvm/vm"
 )
 
@@ -16,7 +17,7 @@ func main() {
 
 	fmt.Println("TinyVM", vm.VersionString, "- (c) Jeffrey Wilcke")
 
-	code := vm.Parse(fibanocci)
+	code := asm.Parse(fibanocci)
 	fmt.Printf("%x\n", code)
 
 	v := vm.New()
