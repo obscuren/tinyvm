@@ -1,9 +1,9 @@
 package asm
 
-type Reg byte
+type RegEntry byte
 
 const (
-	Pc Reg = 0 // program counter register
+	Pc RegEntry = 0 // program counter register
 
 	// general purpose registers
 	R0 = iota
@@ -25,7 +25,7 @@ const (
 	MaxRegister
 )
 
-var RegToString = map[Reg]string{
+var RegToString = map[RegEntry]string{
 	Pc:  "pc",
 	R0:  "r0",
 	R1:  "r1",

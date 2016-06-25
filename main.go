@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	statFlag = flag.Bool("vmstats", false, "display virtual machine stats")
+	statFlag  = flag.Bool("vmstats", false, "display virtual machine stats")
+	printCode = flag.Bool("printcode", false, "prints executing code in hex")
 )
 
 func main() {
@@ -17,16 +18,17 @@ func main() {
 
 	fmt.Println("TinyVM", vm.VersionString, "- (c) Jeffrey Wilcke")
 
-	code := asm.Parse(fibanocci)
-	fmt.Printf("%x\n", code)
+	code := asm.Parse(stack)
+	if *printCode {
+		fmt.Printf("%x\n", code)
+	}
 
 	v := vm.New()
-	ret, err := v.Exec(code)
-	if err != nil {
+	if err := v.Exec(code); err != nil {
 		fmt.Println("err", err)
 		return
 	}
-	fmt.Printf("vm exited with %x\n", ret)
+	fmt.Println("exit:", v.Get(asm.Reg, asm.R0))
 
 	if *statFlag {
 		v.Stats()
@@ -34,6 +36,24 @@ func main() {
 }
 
 const (
+	stack = `
+		push 1
+		pop
+		push 255
+		mov r0 pop
+		push 1
+		push 2
+
+		stop
+	`
+	call = `
+	jmp main
+
+	nop:
+		ret
+	main:
+		call nop
+	`
 	minJmp = `
 		jmp end
 	end:

@@ -4,6 +4,8 @@ type Op byte
 
 const (
 	Mov Op = iota
+	Push
+	Pop
 
 	Jmp
 	Jmpi
@@ -16,18 +18,22 @@ const (
 	Eq
 	Nq
 
+	Call
 	Ret
 
 	Add
 	Sub
 
-	Nop
-
 	Dbg
+
+	Stop
+	Nop
 )
 
 var OpString = map[string]Op{
 	"mov":  Mov,
+	"push": Push,
+	"pop":  Pop,
 	"jmp":  Jmp,
 	"jmpi": Jmpi,
 	"jmpn": Jmpn,
@@ -39,7 +45,9 @@ var OpString = map[string]Op{
 	"nq":   Nq,
 	"add":  Add,
 	"sub":  Sub,
+	"call": Call,
 	"ret":  Ret,
 	"nop":  Nop,
+	"stop": Stop,
 	"dbg":  Dbg,
 }

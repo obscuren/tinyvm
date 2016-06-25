@@ -50,7 +50,7 @@ func Parse(code string) []byte {
 			pc++
 
 			switch op {
-			case Jmpi, Jmpn, Jmp:
+			case Jmpi, Jmpn, Jmp, Call:
 				toFill[pc+1] = splitStr[1]
 
 				parsedCode = append(parsedCode, []byte{10, 0}...)
@@ -72,19 +72,28 @@ func Parse(code string) []byte {
 	return parsedCode
 }
 
+const (
+	Reg byte = iota
+	Mem
+	Dec
+	Stack
+)
+
 func parseLoc(s string) []byte {
 	switch {
 	case s == "pc":
-		return []byte{0, byte(Pc)}
+		return []byte{Reg, byte(Pc)}
+	case s == "pop":
+		return []byte{Stack, 0}
 	case strings.HasPrefix(s, "r"):
 		n, _ := strconv.Atoi(s[1:])
-		return []byte{0, byte(R0 + n)}
+		return []byte{Reg, byte(R0 + n)}
 
 	case strings.HasPrefix(s, "[") && strings.HasSuffix(s, "]"):
 		n, _ := strconv.Atoi(s[1:])
-		return []byte{1, byte(n)}
+		return []byte{Mem, byte(n)}
 	default:
 		n, _ := strconv.Atoi(s)
-		return []byte{10, byte(n)}
+		return []byte{Dec, byte(n)}
 	}
 }

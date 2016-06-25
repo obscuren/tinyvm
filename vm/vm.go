@@ -24,6 +24,7 @@ var VersionString = fmt.Sprintf("%d.%d.%d", Major, Minor, Patch)
 type VM struct {
 	registers [asm.MaxRegister]int64 // general purpose registers
 	memory    map[uint64]int64       // memory addressed by pointer
+	stack     []int64
 }
 
 // New returns a new initialised VM.
@@ -33,23 +34,32 @@ func New() *VM {
 	}
 }
 
+// Set sets the value to the receivers location. The receiver can be either
+// register or memory.
 func (vm *VM) Set(typ byte, loc byte, value int64) {
 	switch typ {
-	case 0:
+	case asm.Reg:
 		vm.registers[loc] = value
-	case 1:
+	case asm.Mem:
 		vm.memory[uint64(loc)] = value
+	case asm.Stack:
+		vm.stack = append(vm.stack, value)
 	}
 }
 
+// Get retrieves the value from the given storage type's location.
 func (vm *VM) Get(typ byte, loc byte) int64 {
 	switch typ {
-	case 0:
+	case asm.Reg:
 		return vm.registers[loc]
-	case 1:
+	case asm.Mem:
 		return vm.memory[uint64(loc)]
-	case 10:
+	case asm.Dec:
 		return int64(loc)
+	case asm.Stack:
+		stackItem := vm.stack[len(vm.stack)-1]
+		vm.stack = vm.stack[:len(vm.stack)-1]
+		return stackItem
 	}
 
 	panic(fmt.Sprintf("vm.Get: invalid get type %d on %d", typ, loc))
@@ -57,23 +67,40 @@ func (vm *VM) Get(typ byte, loc byte) int64 {
 
 // Exec executes the given byte code and returns the status of the
 // program as well as the return value.
-func (vm *VM) Exec(code []byte) ([]byte, error) {
-	var cond bool // instruction condition
+func (vm *VM) Exec(code []byte) error {
+	var (
+		cond      bool    // instruction condition
+		callStack []int64 // call stack
+	)
 	// loop, read and execute each op code
 	pc := vm.registers[0]
 	for int(pc) < len(code) {
 		switch op := asm.Op(code[pc]); op {
+		case asm.Stop:
+			return nil
 		case asm.Mov:
 			typl, loc, typv, locv := code[pc+1], code[pc+2], code[pc+3], code[pc+4]
 			vm.Set(typl, loc, vm.Get(typv, locv))
 
 			pc += 5
-		case asm.Ret:
-			typ, loc := code[pc+1], code[pc+2]
-			buffer := new(bytes.Buffer)
-			binary.Write(buffer, binary.BigEndian, vm.Get(typ, loc))
+		case asm.Push:
+			typv, locv := code[pc+1], code[pc+2]
+			vm.Set(asm.Stack, 0, vm.Get(typv, locv))
 
-			return buffer.Bytes(), nil
+			pc += 3
+		case asm.Pop:
+			vm.Get(asm.Stack, 0) // pop one item of stack and ignore it
+			pc++
+		case asm.Call:
+			callStack = append(callStack, pc+3)
+			pc = vm.Get(code[pc+1], code[pc+2])
+		case asm.Ret:
+			if len(callStack) == 0 {
+				return nil
+			}
+
+			pc = callStack[len(callStack)-1]
+			callStack = callStack[:len(callStack)-1]
 		case asm.Add:
 			typt, t := code[pc+1], code[pc+2]
 			typa, a := code[pc+3], code[pc+4]
@@ -160,18 +187,19 @@ func (vm *VM) Exec(code []byte) ([]byte, error) {
 
 			pc += 3
 		default:
-			return nil, fmt.Errorf("invalid opcode: %d", op)
+			return fmt.Errorf("invalid opcode: %d", op)
 		}
 		vm.registers[0] = pc
 	}
 
-	return nil, nil
+	return nil
 }
 
+// Stats prints the virtual machine internal statistics.
 func (vm *VM) Stats() {
 	fmt.Println("regs:")
 	for register, value := range vm.registers {
-		fmt.Println(asm.RegToString[asm.Reg(register)], ":", value)
+		fmt.Println(asm.RegToString[asm.RegEntry(register)], ":", value)
 	}
 
 	fmt.Println()
@@ -194,4 +222,9 @@ func (vm *VM) Stats() {
 		}
 		fmt.Println(str)
 	}
+
+	fmt.Println()
+	fmt.Println("stack:")
+	fmt.Printf("%x\n", vm.stack)
+
 }
