@@ -53,7 +53,7 @@ func Parse(code string) []byte {
 			case Jmpi, Jmpn, Jmp, Call:
 				toFill[pc+1] = splitStr[1]
 
-				parsedCode = append(parsedCode, []byte{10, 0}...)
+				parsedCode = append(parsedCode, []byte{Dec, 0}...)
 				pc += 2
 			default:
 				for _, loc := range splitStr[1:] {

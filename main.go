@@ -18,7 +18,7 @@ func main() {
 
 	fmt.Println("TinyVM", vm.VersionString, "- (c) Jeffrey Wilcke")
 
-	code := asm.Parse(stack)
+	code := asm.Parse(fibanocci)
 	if *printCode {
 		fmt.Printf("%x\n", code)
 	}
@@ -36,49 +36,61 @@ func main() {
 }
 
 const (
-	stack = `
-		push 1
-		pop
-		push 255
-		mov r0 pop
-		push 1
-		push 2
+	addProgram = `
+		jmp 	main
+	add:    ; add taket two arguments
+		add 	r0 r0 r1
+		ret
+
+	main:   ; main must be called with r0 and r1 set
+		call 	add
 
 		stop
 	`
+	stack = `
+		push 	1
+		pop
+		push 	255
+		mov 	r0 pop
+		push 	1
+		push 	2
+
+		stop
+	`
+
 	call = `
 	jmp main
 
 	nop:
 		ret
 	main:
-		call nop
+		call 	nop
 	`
+
 	minJmp = `
-		jmp end
+		jmp 	end
 	end:
 	`
+
 	example = `
-		mov r0 0
+		mov 	r0 0
 
 	while_not_3:
-		add r0 r0 1
+		add 	r0 r0 1
 
-		lt r0 3
-		jmpi while_not_3
+		lt 	r0 3
+		jmpi 	while_not_3
 
-		mov r1 r0
+		mov 	r1 r0
 	while_not_0:
-		sub r1 r1 1
+		sub 	r1 r1 1
 
-		gt r1 0
-		jmpi while_not_0
+		gt 	r1 0
+		jmpi 	while_not_0
 
 	not_happening:
-		eq 1 0
-		jmpi not_happening
-
-		ret r0
+		eq 	1 0
+		jmpi 	not_happening
 	`
 
 	// r0 = c
@@ -87,27 +99,27 @@ const (
 	// r3 = second
 	// r4 = n
 	fibanocci = `
-	mov r4 5 	; find number 5
-	mov r3 1	; set r3 to 1
+	mov	r4 5 	; find number 5
+	mov	r3 1	; set r3 to 1
 
 for_loop:
-	lt r0 r4
-	jmpn end
+	lt 	r0 r4
+	jmpn 	end
 start_if:
-	lteq r0 1
-	jmpn else
+	lteq 	r0 1
+	jmpn 	else
 
-	mov r1 r0
-	jmp end_if
+	mov 	r1 r0
+	jmp 	end_if
 else:
-	add r1 r2 r3
-	mov r2 r3
-	mov r3 r1
+	add 	r1 r2 r3
+	mov 	r2 r3
+	mov 	r3 r1
 end_if:
-	add r0 r0 1
-	jmp for_loop
+	add 	r0 r0 1
+	jmp 	for_loop
 end:
-	ret r1
+	mov 	r0 r1
 	
 `
 )
