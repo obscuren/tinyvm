@@ -23,8 +23,8 @@ const (
 	Pop
 
 	Jmp
-	Jmpi
-	Jmpn
+	Jmpt
+	Jmpf
 
 	Gt
 	Gteq
@@ -50,8 +50,8 @@ var OpString = map[string]Op{
 	"push": Push,
 	"pop":  Pop,
 	"jmp":  Jmp,
-	"jmpi": Jmpi,
-	"jmpn": Jmpn,
+	"jmpt": Jmpt,
+	"jmpf": Jmpf,
 	"gt":   Gt,
 	"gteq": Gteq,
 	"lt":   Lt,
@@ -76,8 +76,8 @@ var OpToString = map[Op]string{
 	Push: "push",
 	Pop:  "pop",
 	Jmp:  "jmp",
-	Jmpi: "jmpi",
-	Jmpn: "jmpn",
+	Jmpt: "jmpt",
+	Jmpf: "jmpf",
 	Gt:   "gt",
 	Gteq: "gteq",
 	Lt:   "lt",

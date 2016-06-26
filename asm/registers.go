@@ -18,8 +18,6 @@ package asm
 type RegEntry byte
 
 const (
-	Pc RegEntry = 0 // program counter register
-
 	// general purpose registers
 	R0 = iota
 	R1
@@ -41,7 +39,6 @@ const (
 )
 
 var RegToString = map[RegEntry]string{
-	Pc:  "pc",
 	R0:  "r0",
 	R1:  "r1",
 	R2:  "r2",

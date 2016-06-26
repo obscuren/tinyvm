@@ -14,15 +14,22 @@ func isLabel(s string) bool {
 	return strings.HasSuffix(s, labelType)
 }
 
+type parser struct {
+	parsedCode []byte
+	labels     map[string]int
+	toFill     map[int]string
+	pc         int
+}
+
 func Parse(code string) []byte {
-	var (
-		parsedCode []byte
-		labels     = make(map[string]int)
+	parser := &parser{
+		labels: make(map[string]int),
+		toFill: make(map[int]string),
+	}
+	return parser.parse(code)
+}
 
-		toFill = make(map[int]string)
-	)
-
-	pc := 0
+func (p parser) parse(code string) []byte {
 	for _, line := range strings.Split(code, "\n") {
 		// trim comments
 		if idx := strings.Index(line, comment); idx > 0 {
@@ -39,9 +46,9 @@ func Parse(code string) []byte {
 		switch {
 		case isLabel(line):
 			line = strings.TrimSuffix(line, labelType)
-			labels[line] = pc
-			parsedCode = append(parsedCode, byte(Nop))
-			pc++
+			p.labels[line] = p.pc
+			p.parsedCode = append(p.parsedCode, byte(Nop))
+			p.pc++
 		default:
 			var splitStr []string
 			for _, str := range strings.Split(line, " ") {
@@ -51,37 +58,37 @@ func Parse(code string) []byte {
 			}
 			op := OpString[strings.TrimSpace(splitStr[0])]
 
-			parsedCode = append(parsedCode, byte(op))
-			pc++
+			p.parsedCode = append(p.parsedCode, byte(op))
+			p.pc++
 
 			switch op {
-			case Jmpi, Jmpn:
-				parsedCode = append(parsedCode, parseLoc(splitStr[1])...)
-				parsedCode = append(parsedCode, []byte{Dec, 0}...)
+			case Jmpt, Jmpf:
+				p.parsedCode = append(p.parsedCode, p.parseLoc(p.pc, splitStr[1])...)
+				p.parsedCode = append(p.parsedCode, []byte{Dec, 0}...)
 
-				toFill[pc+3] = strings.TrimSpace(splitStr[2])
+				p.toFill[p.pc+3] = strings.TrimSpace(splitStr[2])
 
-				pc += 4
+				p.pc += 4
 			case Jmp, Call:
-				toFill[pc+1] = strings.TrimSpace(splitStr[1])
+				p.toFill[p.pc+1] = strings.TrimSpace(splitStr[1])
 
-				parsedCode = append(parsedCode, []byte{Dec, 0}...)
-				pc += 2
+				p.parsedCode = append(p.parsedCode, []byte{Dec, 0}...)
+				p.pc += 2
 			default:
 				for _, loc := range splitStr[1:] {
-					parsedCode = append(parsedCode, parseLoc(strings.TrimSpace(loc))...)
-					pc += 2
+					p.parsedCode = append(p.parsedCode, p.parseLoc(p.pc, strings.TrimSpace(loc))...)
+					p.pc += 2
 				}
 			}
 
 		}
 	}
 
-	for pc, label := range toFill {
-		parsedCode[pc] = byte(labels[label])
+	for pc, label := range p.toFill {
+		p.parsedCode[pc] = byte(p.labels[label])
 	}
 
-	return parsedCode
+	return p.parsedCode
 }
 
 const (
@@ -91,10 +98,8 @@ const (
 	Stack
 )
 
-func parseLoc(s string) []byte {
+func (p parser) parseLoc(pos int, s string) []byte {
 	switch {
-	case s == "pc":
-		return []byte{Reg, byte(Pc)}
 	case s == "pop":
 		return []byte{Stack, 0}
 	case strings.HasPrefix(s, "r"):
@@ -104,8 +109,11 @@ func parseLoc(s string) []byte {
 	case strings.HasPrefix(s, "[") && strings.HasSuffix(s, "]"):
 		n, _ := strconv.Atoi(s[1:])
 		return []byte{Mem, byte(n)}
-	default:
-		n, _ := strconv.Atoi(s)
+	case strings.HasPrefix(s, "#"):
+		n, _ := strconv.Atoi(s[1:])
 		return []byte{Dec, byte(n)}
+	default:
+		p.toFill[pos+1] = s
+		return []byte{Dec, 0}
 	}
 }

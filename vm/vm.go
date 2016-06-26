@@ -86,9 +86,12 @@ func (vm *VM) Exec(code []byte) error {
 	var (
 		callStack []int64 // call stack
 	)
-	// loop, read and execute each op code
-	pc := vm.registers[0]
-	for int(pc) < len(code) {
+
+	for int(vm.registers[15]) < len(code) {
+		// loop, read and execute each op code
+		pc := vm.registers[15]
+		branch := pc // for branch tracking
+
 		op := asm.Op(code[pc])
 		switch op {
 		case asm.Stop:
@@ -132,14 +135,14 @@ func (vm *VM) Exec(code []byte) error {
 			vm.Set(typt, t, vm.Get(typa, a)-vm.Get(typb, b))
 
 			pc += 7
-		case asm.Jmpi:
+		case asm.Jmpt:
 			typc, c, typp, p := code[pc+1], code[pc+2], code[pc+3], code[pc+4]
 			if vm.Get(typc, c) > 0 {
 				pc = vm.Get(typp, p)
 			} else {
 				pc += 5
 			}
-		case asm.Jmpn:
+		case asm.Jmpf:
 			typc, c, typp, p := code[pc+1], code[pc+2], code[pc+3], code[pc+4]
 			if vm.Get(typc, c) <= 0 {
 				pc = vm.Get(typp, p)
@@ -214,7 +217,13 @@ func (vm *VM) Exec(code []byte) error {
 		default:
 			return fmt.Errorf("invalid opcode: %d", op)
 		}
-		vm.registers[0] = pc
+		fmt.Println(branch, vm.registers[15])
+		// Track branch. If modified don't increment
+		if branch == vm.registers[15] {
+			vm.registers[15] = pc
+		} else {
+			fmt.Println("not set")
+		}
 	}
 
 	return nil

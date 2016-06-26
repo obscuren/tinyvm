@@ -45,7 +45,7 @@ func main() {
 		}
 		code = asm.Parse(string(code))
 	} else {
-		code = asm.Parse(fibanocci)
+		code = asm.Parse(movJump)
 	}
 	if *printCode {
 		fmt.Printf("%x\n", code)
@@ -64,6 +64,19 @@ func main() {
 }
 
 const (
+	movJump = `
+		mov r1 #1
+		mov r15 next
+		mov r0 #1
+	next:
+	`
+
+	labelMov = `
+		mov r1 #1
+	label:
+		mov r0 label
+	`
+
 	addProgram = `
 		jmp 	main
 	add:    ; add taket two arguments
@@ -76,12 +89,12 @@ const (
 		stop
 	`
 	stack = `
-		push 	1
+		push 	#1
 		pop
-		push 	255
+		push 	#255
 		mov 	r0 pop
-		push 	1
-		push 	2
+		push 	#1
+		push 	#2
 
 		stop
 	`
@@ -96,26 +109,26 @@ const (
 	`
 
 	example = `
-		mov 	r0 0
-		mov 	r10 0
+		mov 	r0  #0
+		mov 	r10 #0
 
 	while_not_3:
-		add 	r0 r0 1
+		add 	r0 r0 #1
 
-		lt 	r10 r0 3
-		jmpi 	r10 while_not_3
+		lt 	r10 r0 #3
+		jmpt 	r10 while_not_3
 
 		mov 	r1 r0
-		mov 	r10 0
+		mov 	r10 #0
 	while_not_0:
 		sub 	r1 r1 1
 
-		gt 	r10 r1 0
-		jmpi 	r10 while_not_0
+		gt 	r10 r1 #0
+		jmpt 	r10 while_not_0
 
 	not_happening:
-		eq 	1 0
-		jmpi 	not_happening
+		eq 	1 #0
+		jmpt 	not_happening
 	`
 
 	mov = `
@@ -129,15 +142,15 @@ const (
 	// r3 = second
 	// r4 = n
 	fibanocci = `
-	mov	r4 5 	; find number 5
-	mov	r3 1	; set r3 to 1
+	mov	r4 #5 	; find number 5
+	mov	r3 #1	; set r3 to 1
 
 for_loop:
 	lt 	r10 r0 r4
-	jmpn 	r10 end
+	jmpf 	r10 end
 start_if:
-	lteq 	r10 r0 1
-	jmpn 	r10 else
+	lteq 	r10 r0 #1
+	jmpf 	r10 else
 
 	mov 	r1 r0
 	jmp 	end_if
@@ -146,7 +159,7 @@ else:
 	mov 	r2 r3
 	mov 	r3 r1
 end_if:
-	add 	r0 r0 1
+	add 	r0 r0 #1
 	jmp 	for_loop
 end:
 	mov 	r0 r1
