@@ -34,6 +34,7 @@ func Parse(code string) []byte {
 		if len(line) == 0 {
 			continue
 		}
+		line = strings.Replace(line, "\t", " ", -1)
 
 		switch {
 		case isLabel(line):
@@ -42,22 +43,26 @@ func Parse(code string) []byte {
 			parsedCode = append(parsedCode, byte(Nop))
 			pc++
 		default:
-			var (
-				splitStr = strings.Split(line, " ")
-				op       = OpString[strings.TrimSpace(splitStr[0])]
-			)
+			var splitStr []string
+			for _, str := range strings.Split(line, " ") {
+				if len(str) > 0 {
+					splitStr = append(splitStr, str)
+				}
+			}
+			op := OpString[strings.TrimSpace(splitStr[0])]
+
 			parsedCode = append(parsedCode, byte(op))
 			pc++
 
 			switch op {
 			case Jmpi, Jmpn, Jmp, Call:
-				toFill[pc+1] = splitStr[1]
+				toFill[pc+1] = strings.TrimSpace(splitStr[1])
 
 				parsedCode = append(parsedCode, []byte{Dec, 0}...)
 				pc += 2
 			default:
 				for _, loc := range splitStr[1:] {
-					parsedCode = append(parsedCode, parseLoc(loc)...)
+					parsedCode = append(parsedCode, parseLoc(strings.TrimSpace(loc))...)
 					pc += 2
 				}
 			}

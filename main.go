@@ -117,8 +117,8 @@ const (
 	`
 
 	mov = `
-	mov r4 5
-	mov r3 1
+	mov 	r4 5
+	mov 	r3 1
 	`
 
 	// r0 = c
