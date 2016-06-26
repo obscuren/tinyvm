@@ -55,7 +55,14 @@ func Parse(code string) []byte {
 			pc++
 
 			switch op {
-			case Jmpi, Jmpn, Jmp, Call:
+			case Jmpi, Jmpn:
+				parsedCode = append(parsedCode, parseLoc(splitStr[1])...)
+				parsedCode = append(parsedCode, []byte{Dec, 0}...)
+
+				toFill[pc+3] = strings.TrimSpace(splitStr[2])
+
+				pc += 4
+			case Jmp, Call:
 				toFill[pc+1] = strings.TrimSpace(splitStr[1])
 
 				parsedCode = append(parsedCode, []byte{Dec, 0}...)

@@ -97,19 +97,21 @@ const (
 
 	example = `
 		mov 	r0 0
+		mov 	r10 0
 
 	while_not_3:
 		add 	r0 r0 1
 
-		lt 	r0 3
-		jmpi 	while_not_3
+		lt 	r10 r0 3
+		jmpi 	r10 while_not_3
 
 		mov 	r1 r0
+		mov 	r10 0
 	while_not_0:
 		sub 	r1 r1 1
 
-		gt 	r1 0
-		jmpi 	while_not_0
+		gt 	r10 r1 0
+		jmpi 	r10 while_not_0
 
 	not_happening:
 		eq 	1 0
@@ -131,11 +133,11 @@ const (
 	mov	r3 1	; set r3 to 1
 
 for_loop:
-	lt 	r0 r4
-	jmpn 	end
+	lt 	r10 r0 r4
+	jmpn 	r10 end
 start_if:
-	lteq 	r0 1
-	jmpn 	else
+	lteq 	r10 r0 1
+	jmpn 	r10 else
 
 	mov 	r1 r0
 	jmp 	end_if

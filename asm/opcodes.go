@@ -66,3 +66,29 @@ var OpString = map[string]Op{
 	"stop": Stop,
 	"dbg":  Dbg,
 }
+
+func (o Op) String() string {
+	return OpToString[o]
+}
+
+var OpToString = map[Op]string{
+	Mov:  "mov",
+	Push: "push",
+	Pop:  "pop",
+	Jmp:  "jmp",
+	Jmpi: "jmpi",
+	Jmpn: "jmpn",
+	Gt:   "gt",
+	Gteq: "gteq",
+	Lt:   "lt",
+	Lteq: "lteq",
+	Eq:   "eq",
+	Nq:   "nq",
+	Add:  "add",
+	Sub:  "sub",
+	Call: "call",
+	Ret:  "ret",
+	Nop:  "nop",
+	Stop: "stop",
+	Dbg:  "dbg",
+}

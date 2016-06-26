@@ -84,13 +84,13 @@ func (vm *VM) Get(typ byte, loc byte) int64 {
 // program as well as the return value.
 func (vm *VM) Exec(code []byte) error {
 	var (
-		cond      bool    // instruction condition
 		callStack []int64 // call stack
 	)
 	// loop, read and execute each op code
 	pc := vm.registers[0]
 	for int(pc) < len(code) {
-		switch op := asm.Op(code[pc]); op {
+		op := asm.Op(code[pc])
+		switch op {
 		case asm.Stop:
 			return nil
 		case asm.Mov:
@@ -133,65 +133,75 @@ func (vm *VM) Exec(code []byte) error {
 
 			pc += 7
 		case asm.Jmpi:
-			typp, p := code[pc+1], code[pc+2]
-			if cond {
+			typc, c, typp, p := code[pc+1], code[pc+2], code[pc+3], code[pc+4]
+			if vm.Get(typc, c) > 0 {
 				pc = vm.Get(typp, p)
 			} else {
-				pc += 3
+				pc += 5
 			}
-			cond = false // set the condition back to false after reading
 		case asm.Jmpn:
-			typp, p := code[pc+1], code[pc+2]
-			if !cond {
+			typc, c, typp, p := code[pc+1], code[pc+2], code[pc+3], code[pc+4]
+			if vm.Get(typc, c) <= 0 {
 				pc = vm.Get(typp, p)
 			} else {
-				pc += 3
+				pc += 5
 			}
-			cond = false // set the condition back to false after reading
 		case asm.Jmp:
 			pc = vm.Get(code[pc+1], code[pc+2])
 		case asm.Lt:
-			typa, a, typb, b := code[pc+1], code[pc+2], code[pc+3], code[pc+4]
+			typr, r, typa, a, typb, b := code[pc+1], code[pc+2], code[pc+3], code[pc+4], code[pc+5], code[pc+6]
+			var v int64
 			if vm.Get(typa, a) < vm.Get(typb, b) {
-				cond = true
+				v = 1
 			}
+			vm.Set(typr, r, v)
 
-			pc += 5
+			pc += 7
 		case asm.Gt:
-			typa, a, typb, b := code[pc+1], code[pc+2], code[pc+3], code[pc+4]
+			typr, r, typa, a, typb, b := code[pc+1], code[pc+2], code[pc+3], code[pc+4], code[pc+5], code[pc+6]
+			var v int64
 			if vm.Get(typa, a) > vm.Get(typb, b) {
-				cond = true
+				v = 1
 			}
+			vm.Set(typr, r, v)
 
-			pc += 5
+			pc += 7
 		case asm.Lteq:
-			typa, a, typb, b := code[pc+1], code[pc+2], code[pc+3], code[pc+4]
+			typr, r, typa, a, typb, b := code[pc+1], code[pc+2], code[pc+3], code[pc+4], code[pc+5], code[pc+6]
+			var v int64
 			if vm.Get(typa, a) <= vm.Get(typb, b) {
-				cond = true
+				v = 1
 			}
+			vm.Set(typr, r, v)
 
-			pc += 5
+			pc += 7
 		case asm.Gteq:
-			typa, a, typb, b := code[pc+1], code[pc+2], code[pc+3], code[pc+4]
+			typr, r, typa, a, typb, b := code[pc+1], code[pc+2], code[pc+3], code[pc+4], code[pc+5], code[pc+6]
+			var v int64
 			if vm.Get(typa, a) >= vm.Get(typb, b) {
-				cond = true
+				v = 1
 			}
+			vm.Set(typr, r, v)
 
-			pc += 5
+			pc += 7
 		case asm.Eq:
-			typa, a, typb, b := code[pc+1], code[pc+2], code[pc+3], code[pc+4]
+			typr, r, typa, a, typb, b := code[pc+1], code[pc+2], code[pc+3], code[pc+4], code[pc+5], code[pc+6]
+			var v int64
 			if vm.Get(typa, a) == vm.Get(typb, b) {
-				cond = true
+				v = 1
 			}
+			vm.Set(typr, r, v)
 
-			pc += 5
+			pc += 7
 		case asm.Nq:
-			typa, a, typb, b := code[pc+1], code[pc+2], code[pc+3], code[pc+4]
+			typr, r, typa, a, typb, b := code[pc+1], code[pc+2], code[pc+3], code[pc+4], code[pc+5], code[pc+6]
+			var v int64
 			if vm.Get(typa, a) != vm.Get(typb, b) {
-				cond = true
+				v = 1
 			}
+			vm.Set(typr, r, v)
 
-			pc += 5
+			pc += 7
 		case asm.Nop:
 			pc++
 
