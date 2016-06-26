@@ -12,14 +12,14 @@ contains an assembler language definition and a very simple compiler.
 ## VM
 
 TinyVM comes with a small general purpose register (`r0..r15`, `pc`), unbounded memory (`[addr]`)
-and a general purpose stack mechanism (`pop`, `push`). It supports arbitrary jumps `jmp(n|i)` and
+and a general purpose stack mechanism (`pop`, `push`). It supports arbitrary jumps `jmp(t|f)` and
 a simply calling mechanism (`call`) and keeps an internel call stack to determine the positions for
 returning (`ret`).
 
 ## Example
 
 ```asm
-    jmp 	main
+    mov     r15 main
 add:    ; add taket two arguments
 	add 	r0 r0 r1
 	ret

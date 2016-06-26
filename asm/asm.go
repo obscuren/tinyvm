@@ -69,7 +69,7 @@ func (p parser) parse(code string) []byte {
 				p.toFill[p.pc+3] = strings.TrimSpace(splitStr[2])
 
 				p.pc += 4
-			case Jmp, Call:
+			case Call:
 				p.toFill[p.pc+1] = strings.TrimSpace(splitStr[1])
 
 				p.parsedCode = append(p.parsedCode, []byte{Dec, 0}...)

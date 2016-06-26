@@ -45,7 +45,7 @@ func main() {
 		}
 		code = asm.Parse(string(code))
 	} else {
-		code = asm.Parse(movJump)
+		code = asm.Parse(fibonacci)
 	}
 	if *printCode {
 		fmt.Printf("%x\n", code)
@@ -78,7 +78,7 @@ const (
 	`
 
 	addProgram = `
-		jmp 	main
+		mov 	r15 main
 	add:    ; add taket two arguments
 		add 	r0 r0 r1
 		ret
@@ -100,7 +100,7 @@ const (
 	`
 
 	call = `
-	jmp main
+	mov 	r15 main
 
 	nop:
 		ret
@@ -141,7 +141,7 @@ const (
 	// r2 = first
 	// r3 = second
 	// r4 = n
-	fibanocci = `
+	fibonacci = `
 	mov	r4 #5 	; find number 5
 	mov	r3 #1	; set r3 to 1
 
@@ -153,14 +153,14 @@ start_if:
 	jmpf 	r10 else
 
 	mov 	r1 r0
-	jmp 	end_if
+	mov	r15 end_if
 else:
 	add 	r1 r2 r3
 	mov 	r2 r3
 	mov 	r3 r1
 end_if:
 	add 	r0 r0 #1
-	jmp 	for_loop
+	mov 	r15 for_loop
 end:
 	mov 	r0 r1
 	

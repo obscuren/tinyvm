@@ -149,8 +149,6 @@ func (vm *VM) Exec(code []byte) error {
 			} else {
 				pc += 5
 			}
-		case asm.Jmp:
-			pc = vm.Get(code[pc+1], code[pc+2])
 		case asm.Lt:
 			typr, r, typa, a, typb, b := code[pc+1], code[pc+2], code[pc+3], code[pc+4], code[pc+5], code[pc+6]
 			var v int64
@@ -217,12 +215,9 @@ func (vm *VM) Exec(code []byte) error {
 		default:
 			return fmt.Errorf("invalid opcode: %d", op)
 		}
-		fmt.Println(branch, vm.registers[15])
 		// Track branch. If modified don't increment
 		if branch == vm.registers[15] {
 			vm.registers[15] = pc
-		} else {
-			fmt.Println("not set")
 		}
 	}
 

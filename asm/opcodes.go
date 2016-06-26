@@ -22,7 +22,6 @@ const (
 	Push
 	Pop
 
-	Jmp
 	Jmpt
 	Jmpf
 
@@ -49,7 +48,6 @@ var OpString = map[string]Op{
 	"mov":  Mov,
 	"push": Push,
 	"pop":  Pop,
-	"jmp":  Jmp,
 	"jmpt": Jmpt,
 	"jmpf": Jmpf,
 	"gt":   Gt,
@@ -75,7 +73,6 @@ var OpToString = map[Op]string{
 	Mov:  "mov",
 	Push: "push",
 	Pop:  "pop",
-	Jmp:  "jmp",
 	Jmpt: "jmpt",
 	Jmpf: "jmpf",
 	Gt:   "gt",
