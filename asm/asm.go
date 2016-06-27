@@ -80,7 +80,6 @@ func (p parser) parse(code string) []byte {
 					p.pc += 2
 				}
 			}
-
 		}
 	}
 
@@ -102,6 +101,7 @@ func (p parser) parseLoc(pos int, s string) []byte {
 	switch {
 	case s == "pop":
 		return []byte{Stack, 0}
+
 	case strings.HasPrefix(s, "r"):
 		n, _ := strconv.Atoi(s[1:])
 		return []byte{Reg, byte(R0 + n)}
@@ -109,9 +109,11 @@ func (p parser) parseLoc(pos int, s string) []byte {
 	case strings.HasPrefix(s, "[") && strings.HasSuffix(s, "]"):
 		n, _ := strconv.Atoi(s[1:])
 		return []byte{Mem, byte(n)}
+
 	case strings.HasPrefix(s, "#"):
 		n, _ := strconv.Atoi(s[1:])
 		return []byte{Dec, byte(n)}
+
 	default:
 		p.toFill[pos+1] = s
 		return []byte{Dec, 0}

@@ -11,10 +11,11 @@ contains an assembler language definition and a very simple compiler.
 
 ## VM
 
-TinyVM comes with a small general purpose register (`r0..r15`, `pc`), unbounded memory (`[addr]`)
-and a general purpose stack mechanism (`pop`, `push`). It supports arbitrary jumps `jmp(t|f)` and
-a simply calling mechanism (`call`) and keeps an internel call stack to determine the positions for
-returning (`ret`).
+TinyVM comes with a small general purpose register (`r0..r15`), unbounded memory (`[addr]`)
+and a general purpose stack mechanism (`pop`, `push`). `r15` is a special register for the
+program counter and can be set to jump to arbitrary position in code. TinyVM also has a very
+simple calling mechanism (`call`) and keeps an internal call stack to determine the positions
+for returning (`ret`).
 
 ## Example
 
@@ -52,4 +53,28 @@ if err := v.Exec(code); err != nil {
 
 // exit: 5
 fmt.Println("exit:", v.Get(asm.Reg, asm.R0))
+```
+
+## Instruction encoding
+
+The instruction scheme used by TinyVM is based on the ARM instruction scheme though with
+some arrangement in the ops order. TinyVM uses 4-bit rotation value (9th to 12th bit) to
+shift the 8-bit immediate value. This clever trick allows us to encode a lot of values in
+the range of `2^0..32` in only 12-bits. When an immediate value is encoded in `Ops2` the
+25th bit is set to 1, indicating an immediate value is encoded in the lower 12 bits of the
+instruction.
+
+The last 4 bits will be used for conditional execution (like ARM). Any instruction can be
+form of `operation[condition]` e.g. `addeq` for *add if equal* or `movgt` for *mov if
+greater than*.
+
+```
++--------------+---------+----------+----------+----------+----------+---------+---------+---------+
+| Bits         |31 .. 28 | 27 .. 24 | 23 .. 20 | 19 .. 16 | 15 .. 12 | 11 .. 8 | 7 ... 4 | 3 ... 0 |
++--------------+---------+----------+----------+----------+----------+---------+---------+---------+
+| Description  |  COND   |    I     |    INS   |    Ds    |   Op1    |    Op2  |         |         |
++--------------+---------+----------+----------+----------+----------+---------+---------+---------+
+| mov r1 #260  |  0000   |   0001   |   0101   |   0001   |   0000   |   1111  |  0100   |   0001  |
+| mov r1 r2    |  0000   |   0000   |   0101   |   0001   |   0002   |   0000  |  0000   |   0000  |
++--------------+---------+----------+----------+----------+----------+---------+---------+---------+
 ```

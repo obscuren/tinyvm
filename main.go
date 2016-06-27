@@ -45,7 +45,7 @@ func main() {
 		}
 		code = asm.Parse(string(code))
 	} else {
-		code = asm.Parse(fibonacci)
+		code = asm.Parse(mov)
 	}
 	if *printCode {
 		fmt.Printf("%x\n", code)
@@ -132,8 +132,8 @@ const (
 	`
 
 	mov = `
-	mov 	r4 5
-	mov 	r3 1
+	mov 	r1 #260
+	mov 	r1 r2
 	`
 
 	// r0 = c

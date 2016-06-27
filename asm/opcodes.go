@@ -18,7 +18,7 @@ package asm
 type Op byte
 
 const (
-	Mov Op = iota
+	Mov Op = 10 + iota
 	Push
 	Pop
 
