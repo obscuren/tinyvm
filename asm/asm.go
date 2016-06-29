@@ -1,17 +1,30 @@
 package asm
 
 import (
+	"bytes"
+	"encoding/binary"
+	"fmt"
 	"strconv"
 	"strings"
 )
 
 const (
-	labelType = ":"
-	comment   = ";"
+	labelType       = ":"
+	comment         = ";"
+	registerPrefix  = "r"
+	immediatePrefix = "#"
 )
 
 func isLabel(s string) bool {
 	return strings.HasSuffix(s, labelType)
+}
+
+func isRegister(s string) bool {
+	return strings.HasPrefix(s, registerPrefix)
+}
+
+func isImmediate(s string) bool {
+	return strings.HasPrefix(s, immediatePrefix)
 }
 
 type parser struct {
@@ -21,7 +34,7 @@ type parser struct {
 	pc         int
 }
 
-func Parse(code string) []byte {
+func Parse(code string) ([]byte, error) {
 	parser := &parser{
 		labels: make(map[string]int),
 		toFill: make(map[int]string),
@@ -29,7 +42,13 @@ func Parse(code string) []byte {
 	return parser.parse(code)
 }
 
-func (p parser) parse(code string) []byte {
+func opArgError(op Op, must, count int) error {
+	return fmt.Errorf("%s requires %d argumenst but got %d", op, must, count)
+}
+
+func (p parser) parse(code string) ([]byte, error) {
+	writer := new(bytes.Buffer)
+
 	for _, line := range strings.Split(code, "\n") {
 		// trim comments
 		if idx := strings.Index(line, comment); idx > 0 {
@@ -56,38 +75,126 @@ func (p parser) parse(code string) []byte {
 					splitStr = append(splitStr, str)
 				}
 			}
-			op := OpString[strings.TrimSpace(splitStr[0])]
-
-			p.parsedCode = append(p.parsedCode, byte(op))
 			p.pc++
 
+			var (
+				op    = OpString[strings.TrimSpace(splitStr[0])]
+				instr Instruction
+			)
+
 			switch op {
-			case Jmpt, Jmpf:
-				p.parsedCode = append(p.parsedCode, p.parseLoc(p.pc, splitStr[1])...)
-				p.parsedCode = append(p.parsedCode, []byte{Dec, 0}...)
-
-				p.toFill[p.pc+3] = strings.TrimSpace(splitStr[2])
-
-				p.pc += 4
-			case Call:
-				p.toFill[p.pc+1] = strings.TrimSpace(splitStr[1])
-
-				p.parsedCode = append(p.parsedCode, []byte{Dec, 0}...)
-				p.pc += 2
-			default:
-				for _, loc := range splitStr[1:] {
-					p.parsedCode = append(p.parsedCode, p.parseLoc(p.pc, strings.TrimSpace(loc))...)
-					p.pc += 2
+			case Mov:
+				if len(splitStr) != 3 {
+					return nil, opArgError(op, 2, len(splitStr))
 				}
+				if !isRegister(splitStr[1]) {
+					return nil, fmt.Errorf("%s: dst must be register: %s", op, splitStr[1])
+				}
+
+				dst, err := strconv.Atoi(splitStr[1][1:])
+				if err != nil {
+					return nil, fmt.Errorf("%s: unexpected error: %v", op, err)
+				}
+
+				instr = Instruction{
+					Op:  op,
+					Dst: RegEntry(dst),
+				}
+				if isImmediate(splitStr[2]) {
+					ops, err := strconv.Atoi(splitStr[2][1:])
+					if err != nil {
+						return nil, fmt.Errorf("%s: unexepected error: %v", op, err)
+					}
+					instr.Immediate = true
+					instr.Value = uint32(ops)
+				} else {
+					ops, err := strconv.Atoi(splitStr[2][1:])
+					if err != nil {
+						return nil, fmt.Errorf("%s: unexepected error: %v", op, err)
+					}
+					instr.Ops1 = RegEntry(ops)
+				}
+				encoded, err := EncodeInstruction(instr)
+				if err != nil {
+					return nil, fmt.Errorf("%s: unexpected error: %v", op, err)
+				}
+				binary.Write(writer, binary.BigEndian, encoded)
+			case Add, Sub:
+				if len(splitStr) != 4 {
+					return nil, opArgError(op, 3, len(splitStr))
+				}
+				if !isRegister(splitStr[1]) {
+					return nil, fmt.Errorf("%s: dst must be register: %s", op, splitStr[1])
+				}
+				if !isRegister(splitStr[2]) {
+					return nil, fmt.Errorf("%s: ops1 must be register: %s", op, splitStr[1])
+				}
+
+				dst, err := strconv.Atoi(splitStr[1][1:])
+				if err != nil {
+					return nil, fmt.Errorf("%s: unexpected error: %v", op, err)
+				}
+				ops1, err := strconv.Atoi(splitStr[2][1:])
+				if err != nil {
+					return nil, fmt.Errorf("%s: unexpected error: %v", op, err)
+				}
+
+				instr = Instruction{
+					Op:   op,
+					Dst:  RegEntry(dst),
+					Ops1: RegEntry(ops1),
+				}
+
+				ops2, err := strconv.Atoi(splitStr[3][1:])
+				if err != nil {
+					return nil, fmt.Errorf("%s: unexepected error: %v", op, err)
+				}
+				if isImmediate(splitStr[3]) {
+					instr.Immediate = true
+					instr.Value = uint32(ops2)
+				} else {
+					instr.Ops2 = RegEntry(ops2)
+				}
+				encoded, err := EncodeInstruction(instr)
+				if err != nil {
+					return nil, fmt.Errorf("%s: unexpected error: %v", op, err)
+				}
+				binary.Write(writer, binary.BigEndian, encoded)
 			}
+			/*
+				p.parsedCode = append(p.parsedCode, byte(op))
+
+				switch op {
+				case Jmpt, Jmpf:
+					p.parsedCode = append(p.parsedCode, p.parseLoc(p.pc, splitStr[1])...)
+					p.parsedCode = append(p.parsedCode, []byte{Dec, 0}...)
+
+					p.toFill[p.pc+3] = strings.TrimSpace(splitStr[2])
+
+					p.pc += 4
+				case Call:
+					p.toFill[p.pc+1] = strings.TrimSpace(splitStr[1])
+
+					p.parsedCode = append(p.parsedCode, []byte{Dec, 0}...)
+					p.pc += 2
+				default:
+					for _, loc := range splitStr[1:] {
+						p.parsedCode = append(p.parsedCode, p.parseLoc(p.pc, strings.TrimSpace(loc))...)
+						p.pc += 2
+					}
+				}
+			*/
 		}
 	}
 
-	for pc, label := range p.toFill {
-		p.parsedCode[pc] = byte(p.labels[label])
-	}
+	/*
+		for pc, label := range p.toFill {
+			p.parsedCode[pc] = byte(p.labels[label])
+		}
 
-	return p.parsedCode
+		return p.parsedCode, nil
+	*/
+	return writer.Bytes(), nil
 }
 
 const (

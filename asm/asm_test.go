@@ -4,10 +4,10 @@ import "fmt"
 
 func ExampleEncodeInstruction() {
 	instr := Instruction{
-		Instruction: Mov,
-		Dst:         R1,
-		Immediate:   true,
-		Value:       260,
+		Op:        Mov,
+		Dst:       R1,
+		Immediate: true,
+		Value:     260,
 	}
 	encoded, err := EncodeInstruction(instr)
 	if err != err {
@@ -16,9 +16,9 @@ func ExampleEncodeInstruction() {
 	fmt.Printf("%032b\n", encoded)
 
 	instr = Instruction{
-		Instruction: Mov,
-		Dst:         R1,
-		Ops1:        R2,
+		Op:   Mov,
+		Dst:  R1,
+		Ops1: R2,
 	}
 
 	encoded, err = EncodeInstruction(instr)
@@ -27,6 +27,6 @@ func ExampleEncodeInstruction() {
 	}
 	fmt.Printf("%032b\n", encoded)
 	// Output:
-	// 00000001010100010000111101000001
-	// 00000000010100010001000000000000
+	// 00000001101000010000111101000001
+	// 00000000101000010001000000000000
 }

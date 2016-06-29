@@ -18,7 +18,10 @@ package asm
 type Op byte
 
 const (
-	Mov Op = 10 + iota
+	Mov Op = iota
+	Add
+	Sub
+
 	Push
 	Pop
 
@@ -34,9 +37,6 @@ const (
 
 	Call
 	Ret
-
-	Add
-	Sub
 
 	Dbg
 

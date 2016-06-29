@@ -17,6 +17,11 @@ program counter and can be set to jump to arbitrary position in code. TinyVM als
 simple calling mechanism (`call`) and keeps an internal call stack to determine the positions
 for returning (`ret`).
 
+Setting register `r15` to anything other than the default (`0`) means execution will start from
+that position and onward. In the future we'll allow labels to be specified in the form of
+`v.Set(asm.Reg, asm.R15, "my_label")`, but this has to be implemented in both the vm as well as
+the compiler who does not yet emit label information during the assembly stage of the "compiler".
+
 ## Example
 
 ```asm
@@ -40,7 +45,7 @@ if err != nil {
 }
 
 
-v := vm.New()
+v := vm.New(false) // pass "true" for debug info
 // set the registers (as required for "main")
 v.Set(asm.Reg, asm.R0, 3) // set r0 to 3
 v.Set(asm.Reg, asm.R1, 2) // set r1 to 2
@@ -74,7 +79,7 @@ greater than*.
 +--------------+---------+----------+----------+----------+----------+---------+---------+---------+
 | Description  |  COND   |    I     |    INS   |    Ds    |   Op1    |    Op2  |         |         |
 +--------------+---------+----------+----------+----------+----------+---------+---------+---------+
-| mov r1 #260  |  0000   |   0001   |   0101   |   0001   |   0000   |   1111  |  0100   |   0001  |
-| mov r1 r2    |  0000   |   0000   |   0101   |   0001   |   0002   |   0000  |  0000   |   0000  |
+| mov r1 #260  |  0000   |   0001   |   1010   |   0001   |   0000   |   1111  |  0100   |   0001  |
+| mov r1 r2    |  0000   |   0000   |   1010   |   0001   |   0002   |   0000  |  0000   |   0000  |
 +--------------+---------+----------+----------+----------+----------+---------+---------+---------+
 ```

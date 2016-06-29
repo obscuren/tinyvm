@@ -28,6 +28,7 @@ import (
 var (
 	statFlag  = flag.Bool("vmstats", false, "display virtual machine stats")
 	printCode = flag.Bool("printcode", false, "prints executing code in hex")
+	debug     = flag.Bool("debug", false, "prints debug information during execution")
 )
 
 func main() {
@@ -35,7 +36,10 @@ func main() {
 
 	fmt.Println("TinyVM", vm.VersionString, "- (c) Jeffrey Wilcke")
 
-	var code []byte
+	var (
+		code []byte
+		err  error
+	)
 	if len(flag.Args()) > 0 {
 		var err error
 		code, err = ioutil.ReadFile(flag.Args()[0])
@@ -43,15 +47,26 @@ func main() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		code = asm.Parse(string(code))
+		code, err = asm.Parse(string(code))
 	} else {
-		code = asm.Parse(mov)
+		code, err = asm.Parse(mov)
+	}
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
 	if *printCode {
 		fmt.Printf("%x\n", code)
+		for i := 0; i < len(code); i += 4 {
+			for _, b := range code[i : i+4] {
+				fmt.Printf("%08b", b)
+			}
+			fmt.Printf(" ")
+		}
+		fmt.Println()
 	}
 
-	v := vm.New()
+	v := vm.New(*debug)
 	if err := v.Exec(code); err != nil {
 		fmt.Println("err", err)
 		return
@@ -64,6 +79,14 @@ func main() {
 }
 
 const (
+	mov = `
+	mov 	r1 #260
+	mov 	r2 r1
+	mov     r3 r1
+	add     r0 r1 #2
+	sub     r0 r0 #6
+	`
+
 	movJump = `
 		mov r1 #1
 		mov r15 next
@@ -129,11 +152,6 @@ const (
 	not_happening:
 		eq 	1 #0
 		jmpt 	not_happening
-	`
-
-	mov = `
-	mov 	r1 #260
-	mov 	r1 r2
 	`
 
 	// r0 = c
