@@ -15,14 +15,17 @@ const (
 	immediatePrefix = "#"
 )
 
+// isLabel returns whether s is of type label
 func isLabel(s string) bool {
 	return strings.HasSuffix(s, labelType)
 }
 
+// isRegister returns whether s is of type register
 func isRegister(s string) bool {
 	return strings.HasPrefix(s, registerPrefix)
 }
 
+// isImmediate returns whether s is of type immediate
 func isImmediate(s string) bool {
 	return strings.HasPrefix(s, immediatePrefix)
 }
@@ -66,6 +69,8 @@ func (p parser) parse(code string) ([]byte, error) {
 			line = strings.TrimSuffix(line, labelType)
 			p.labels[line] = p.pc
 			p.parsedCode = append(p.parsedCode, byte(Nop))
+			// decrement program counter as a measure of "ignore"
+			// this "instruction".
 			p.pc--
 		default:
 			var splitStr []string
@@ -76,8 +81,8 @@ func (p parser) parse(code string) ([]byte, error) {
 			}
 
 			var (
-				op  Op
-				con Cond
+				op  Op   // op code
+				con Cond // condition
 			)
 
 			splitStr[0] = strings.TrimSpace(splitStr[0])
@@ -173,7 +178,6 @@ func (p parser) parse(code string) ([]byte, error) {
 					ops, err := strconv.Atoi(splitStr[2][1:])
 					if err != nil {
 						// Expect a string. TODO fix this
-						//return nil, fmt.Errorf("%s: unexepected error: %v", op, err)
 						p.toFill[p.pc] = splitStr[2]
 					}
 					instr.Ops1 = RegEntry(ops)
@@ -211,31 +215,18 @@ func (p parser) parse(code string) ([]byte, error) {
 				} else {
 					instr.Ops2 = RegEntry(ops2)
 				}
+			case Call:
+				if len(splitStr) != 2 {
+					return nil, opArgError(op, 1, len(splitStr))
+				}
+				ops, err := strconv.Atoi(splitStr[1][1:])
+				if err != nil {
+					// Expect a string. TODO fix this
+					p.toFill[p.pc] = splitStr[1]
+				}
+				instr.Dst = RegEntry(ops)
 			}
 			instructions = append(instructions, instr)
-			/*
-				p.parsedCode = append(p.parsedCode, byte(op))
-
-				switch op {
-				case Jmpt, Jmpf:
-					p.parsedCode = append(p.parsedCode, p.parseLoc(p.pc, splitStr[1])...)
-					p.parsedCode = append(p.parsedCode, []byte{Dec, 0}...)
-
-					p.toFill[p.pc+3] = strings.TrimSpace(splitStr[2])
-
-					p.pc += 4
-				case Call:
-					p.toFill[p.pc+1] = strings.TrimSpace(splitStr[1])
-
-					p.parsedCode = append(p.parsedCode, []byte{Dec, 0}...)
-					p.pc += 2
-				default:
-					for _, loc := range splitStr[1:] {
-						p.parsedCode = append(p.parsedCode, p.parseLoc(p.pc, strings.TrimSpace(loc))...)
-						p.pc += 2
-					}
-				}
-			*/
 		}
 		p.pc++
 	}

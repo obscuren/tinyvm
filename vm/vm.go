@@ -87,17 +87,18 @@ func (vm *VM) Get(typ byte, loc byte) uint32 {
 // program as well as the return value.
 func (vm *VM) Exec(code []byte) error {
 	var (
-		//callStack []uint32 // call stack
-		codePos          = vm.registers[15] * 4
-		conditionalValue int32
+		callStack        []uint32               // call stack
+		instrPos         = vm.registers[15] * 4 // instruction to read
+		conditionalValue int32                  // condition value used by conditional instructions
 	)
 
-	for int(codePos) < len(code) {
+	// iterate over the instructions
+	for int(instrPos) < len(code) {
 		// loop, read and execute each op code
 		pc := vm.registers[15]
 		branch := pc // for branch tracking
 
-		instr := asm.DecodeInstruction(binary.BigEndian.Uint32(code[codePos : codePos+4]))
+		instr := asm.DecodeInstruction(binary.BigEndian.Uint32(code[instrPos : instrPos+4]))
 		if vm.debug {
 			fmt.Printf("instruction: %032b\n", instr.Raw)
 			fmt.Printf("state: cv=%d\n", conditionalValue)
@@ -133,8 +134,11 @@ func (vm *VM) Exec(code []byte) error {
 				skipInstr = true
 			}
 		}
+		// reset the conditional value once it has been read
 		conditionalValue = 0
 
+		// instructions are skipped based on the conditional value
+		// and the instruction condition.
 		if !skipInstr {
 			switch instr.Op {
 			case asm.Mov:
@@ -165,12 +169,28 @@ func (vm *VM) Exec(code []byte) error {
 			case asm.Cmp:
 				conditionalValue = int32(vm.Get(asm.Reg, byte(instr.Dst)) - vm.Get(asm.Reg, byte(instr.Ops1)))
 				pc++
+			case asm.Call:
+				callStack = append(callStack, pc+1)
+				vm.Set(asm.Reg, byte(asm.R15), instr.Value)
+			case asm.Ret:
+				if len(callStack) == 0 {
+					return nil
+				}
+				pc = callStack[len(callStack)-1]
+				callStack = callStack[:len(callStack)-1]
+			case asm.Stop:
+				return nil
+			case asm.Nop:
+				pc++
+			default:
+				return fmt.Errorf("invalid opcode: %d", instr.Op)
 			}
 			// set conditional value if S is set
 			if instr.S {
 				conditionalValue = int32(vm.Get(asm.Reg, byte(instr.Dst)))
 			}
 		} else {
+			// increment the program counter
 			pc++
 		}
 
@@ -303,7 +323,7 @@ func (vm *VM) Exec(code []byte) error {
 		if branch == vm.registers[15] {
 			vm.registers[15] = pc
 		}
-		codePos = vm.registers[15] * 4
+		instrPos = vm.registers[15] * 4
 	}
 
 	return nil

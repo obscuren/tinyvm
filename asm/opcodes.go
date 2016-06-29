@@ -24,53 +24,29 @@ const (
 
 	Cmp
 
+	Call
+	Ret
+
 	Push
 	Pop
 
 	Jmpt
-	Jmpf
-
-	/*
-		Gt
-		Gteq
-		Lt
-		Lteq
-		Eq
-		Nq
-	*/
-
-	Call
-	Ret
-
-	Dbg
 
 	Stop
 	Nop
 )
 
 var OpString = map[string]Op{
-	"mov": Mov,
-	"add": Add,
-	"sub": Sub,
-	"cmp": Cmp,
-
+	"mov":  Mov,
+	"add":  Add,
+	"sub":  Sub,
+	"cmp":  Cmp,
 	"push": Push,
 	"pop":  Pop,
-	"jmpt": Jmpt,
-	"jmpf": Jmpf,
-	/*
-		"gt":   Gt,
-		"gteq": Gteq,
-		"lt":   Lt,
-		"lteq": Lteq,
-		"eq":   Eq,
-		"nq":   Nq,
-	*/
 	"call": Call,
 	"ret":  Ret,
 	"nop":  Nop,
 	"stop": Stop,
-	"dbg":  Dbg,
 }
 
 func (o Op) String() string {
@@ -78,28 +54,16 @@ func (o Op) String() string {
 }
 
 var OpToString = map[Op]string{
-	Mov: "mov",
-	Add: "add",
-	Sub: "sub",
-	Cmp: "cmp",
-
+	Mov:  "mov",
+	Add:  "add",
+	Sub:  "sub",
+	Cmp:  "cmp",
 	Push: "push",
 	Pop:  "pop",
-	Jmpt: "jmpt",
-	Jmpf: "jmpf",
-	/*
-		Gt:   "gt",
-		Gteq: "gteq",
-		Lt:   "lt",
-		Lteq: "lteq",
-		Eq:   "eq",
-		Nq:   "nq",
-	*/
 	Call: "call",
 	Ret:  "ret",
 	Nop:  "nop",
 	Stop: "stop",
-	Dbg:  "dbg",
 }
 
 type Cond byte
