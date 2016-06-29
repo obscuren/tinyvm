@@ -67,6 +67,10 @@ func main() {
 	}
 
 	v := vm.New(*debug)
+	for i, registerFlag := range registerFlags {
+		v.Set(asm.Reg, byte(i), uint32(*registerFlag))
+	}
+
 	if err := v.Exec(code); err != nil {
 		fmt.Println("err", err)
 		os.Exit(1)
@@ -75,5 +79,13 @@ func main() {
 
 	if *statFlag {
 		v.Stats()
+	}
+}
+
+var registerFlags [asm.MaxRegister]*int
+
+func init() {
+	for i := 0; i < asm.MaxRegister; i++ {
+		registerFlags[i] = flag.Int(fmt.Sprintf("r%d", i), 0, fmt.Sprintf("sets the r%d register prior to execution", i))
 	}
 }

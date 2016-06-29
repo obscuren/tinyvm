@@ -4,6 +4,18 @@ TinyVM is a minimalistic 64bit Virtual Machine. The aim of TinyVM is to make it 
 in other Go projects that require a Virtual Machine. TinyVM is **not** thread-safe, though
 this is subject to change.
 
+## Installation
+
+To install the TinyVM binary please make sure you've got Go properly set up, then run
+`go get github.com/obscuren/tinyvm`
+
+### Usage
+
+Basic: `tinyvm <flags> file`. TinyVM allows you to set the registers from the command line using the
+`-r#`. Where `#` is the register number (0 to 15). Please take extra care when setting register 15.
+This register is used for the program counter and allows you to control the flow of execution. Please
+refer to the `-help` option for more information.
+
 ## Assembler
 
 TinyVM comes with a small set of assembler instructions to make it easy to use. The `asm` package
