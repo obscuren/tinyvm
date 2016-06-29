@@ -112,6 +112,10 @@ func (vm *VM) Exec(code []byte) error {
 			if conditionalValue != 0 {
 				skipInstr = true
 			}
+		case asm.Ne:
+			if conditionalValue == 0 {
+				skipInstr = true
+			}
 		case asm.Lt:
 			if conditionalValue >= 0 {
 				skipInstr = true
@@ -299,7 +303,7 @@ func (vm *VM) Exec(code []byte) error {
 		if branch == vm.registers[15] {
 			vm.registers[15] = pc
 		}
-		codePos = pc * 4
+		codePos = vm.registers[15] * 4
 	}
 
 	return nil

@@ -49,7 +49,7 @@ func main() {
 		}
 		code, err = asm.Parse(string(code))
 	} else {
-		code, err = asm.Parse(mov)
+		code, err = asm.Parse(loop)
 	}
 	if err != nil {
 		fmt.Println(err)
@@ -99,6 +99,13 @@ const (
 	mov    r6 #1
 	subs   r6 r6 #1 ; if a == 0
 	moveq  r6 #2    ;    a = 2
+	`
+
+	loop = `
+		mov	r1 #10
+	loop:
+		subs	r1 r1 #1
+		movne	r15 loop
 	`
 
 	movJump = `

@@ -107,6 +107,7 @@ type Cond byte
 const (
 	NoCond = iota
 	Eq
+	Ne
 	Gt
 	Gteq
 	Lt
@@ -119,6 +120,7 @@ func (c Cond) String() string {
 
 var StringToCond = map[string]Cond{
 	"eq":   Eq,
+	"ne":   Ne,
 	"gt":   Gt,
 	"lt":   Lt,
 	"gteq": Gteq,
@@ -128,6 +130,7 @@ var StringToCond = map[string]Cond{
 var CondToString = map[Cond]string{
 	NoCond: "nocond",
 	Eq:     "eq",
+	Ne:     "ne",
 	Gt:     "gt",
 	Lt:     "lt",
 	Gteq:   "gteq",

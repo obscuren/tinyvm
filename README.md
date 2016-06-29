@@ -58,6 +58,11 @@ greater than*.
 
 ## Example
 
+### Integraton
+
+The following example is an integration example on how you could embed TinyVM in to your
+own project.
+
 ```asm
     mov     r15 main
 add:    ; add taket two arguments
@@ -94,3 +99,17 @@ if err := v.Exec(code); err != nil {
 fmt.Println("exit:", v.Get(asm.Reg, asm.R0))
 ```
 
+### ASM samples
+
+#### Counter
+
+The following code fragment is a loop which runs until the counter in `r0` hits zero
+When it hits zero the condition code `ne` (not equal to zero) controling branch becomes
+false and exits the loop.
+
+```asm
+	mov     r0   #10
+loop:
+	subs	r0   r0 #1
+	movne	r15  loop
+```

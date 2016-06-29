@@ -47,8 +47,7 @@ func opArgError(op Op, must, count int) error {
 }
 
 func (p parser) parse(code string) ([]byte, error) {
-	writer := new(bytes.Buffer)
-
+	var instructions []Instruction
 	for _, line := range strings.Split(code, "\n") {
 		// trim comments
 		if idx := strings.Index(line, comment); idx > 0 {
@@ -67,7 +66,7 @@ func (p parser) parse(code string) ([]byte, error) {
 			line = strings.TrimSuffix(line, labelType)
 			p.labels[line] = p.pc
 			p.parsedCode = append(p.parsedCode, byte(Nop))
-			p.pc++
+			p.pc--
 		default:
 			var splitStr []string
 			for _, str := range strings.Split(line, " ") {
@@ -75,7 +74,6 @@ func (p parser) parse(code string) ([]byte, error) {
 					splitStr = append(splitStr, str)
 				}
 			}
-			p.pc++
 
 			var (
 				op  Op
@@ -91,6 +89,8 @@ func (p parser) parse(code string) ([]byte, error) {
 					con = Lt
 				case "eq":
 					con = Eq
+				case "ne":
+					con = Ne
 				}
 				if con != NoCond {
 					op = OpString[splitStr[0][:len(splitStr[0])-2]]
@@ -172,7 +172,9 @@ func (p parser) parse(code string) ([]byte, error) {
 				} else {
 					ops, err := strconv.Atoi(splitStr[2][1:])
 					if err != nil {
-						return nil, fmt.Errorf("%s: unexepected error: %v", op, err)
+						// Expect a string. TODO fix this
+						//return nil, fmt.Errorf("%s: unexepected error: %v", op, err)
+						p.toFill[p.pc] = splitStr[2]
 					}
 					instr.Ops1 = RegEntry(ops)
 				}
@@ -210,11 +212,7 @@ func (p parser) parse(code string) ([]byte, error) {
 					instr.Ops2 = RegEntry(ops2)
 				}
 			}
-			encoded, err := EncodeInstruction(instr)
-			if err != nil {
-				return nil, fmt.Errorf("%s: unexpected error: %v", op, err)
-			}
-			binary.Write(writer, binary.BigEndian, encoded)
+			instructions = append(instructions, instr)
 			/*
 				p.parsedCode = append(p.parsedCode, byte(op))
 
@@ -239,15 +237,22 @@ func (p parser) parse(code string) ([]byte, error) {
 				}
 			*/
 		}
+		p.pc++
+	}
+	for pc, label := range p.toFill {
+		instructions[pc].Immediate = true
+		instructions[pc].Value = uint32(p.labels[label])
 	}
 
-	/*
-		for pc, label := range p.toFill {
-			p.parsedCode[pc] = byte(p.labels[label])
+	writer := new(bytes.Buffer)
+	for _, instr := range instructions {
+		encoded, err := EncodeInstruction(instr)
+		if err != nil {
+			return nil, fmt.Errorf("%s: unexpected error: %v", instr.Op, err)
 		}
+		binary.Write(writer, binary.BigEndian, encoded)
+	}
 
-		return p.parsedCode, nil
-	*/
 	return writer.Bytes(), nil
 }
 
