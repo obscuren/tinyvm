@@ -86,6 +86,17 @@ func (p parser) parse(code string) ([]byte, error) {
 			)
 
 			splitStr[0] = strings.TrimSpace(splitStr[0])
+			if len(splitStr[0]) > 4 {
+				switch splitStr[0][len(splitStr[0])-4:] {
+				case "gteq":
+					con = Gteq
+				case "lteq":
+					con = Lteq
+				}
+				if con != NoCond {
+					op = OpString[splitStr[0][:len(splitStr[0])-4]]
+				}
+			}
 			if len(splitStr[0]) > 2 {
 				switch splitStr[0][len(splitStr[0])-2:] {
 				case "gt":
@@ -99,17 +110,6 @@ func (p parser) parse(code string) ([]byte, error) {
 				}
 				if con != NoCond {
 					op = OpString[splitStr[0][:len(splitStr[0])-2]]
-				}
-			}
-			if len(splitStr[0]) > 4 {
-				switch splitStr[0][len(splitStr[0])-4:] {
-				case "gteq":
-					con = Gteq
-				case "lteq":
-					con = Lteq
-				}
-				if con != NoCond {
-					op = OpString[splitStr[0][:len(splitStr[0])-4]]
 				}
 			}
 
