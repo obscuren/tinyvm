@@ -22,18 +22,22 @@ const (
 	Add
 	Sub
 
+	Cmp
+
 	Push
 	Pop
 
 	Jmpt
 	Jmpf
 
-	Gt
-	Gteq
-	Lt
-	Lteq
-	Eq
-	Nq
+	/*
+		Gt
+		Gteq
+		Lt
+		Lteq
+		Eq
+		Nq
+	*/
 
 	Call
 	Ret
@@ -45,19 +49,23 @@ const (
 )
 
 var OpString = map[string]Op{
-	"mov":  Mov,
+	"mov": Mov,
+	"add": Add,
+	"sub": Sub,
+	"cmp": Cmp,
+
 	"push": Push,
 	"pop":  Pop,
 	"jmpt": Jmpt,
 	"jmpf": Jmpf,
-	"gt":   Gt,
-	"gteq": Gteq,
-	"lt":   Lt,
-	"lteq": Lteq,
-	"eq":   Eq,
-	"nq":   Nq,
-	"add":  Add,
-	"sub":  Sub,
+	/*
+		"gt":   Gt,
+		"gteq": Gteq,
+		"lt":   Lt,
+		"lteq": Lteq,
+		"eq":   Eq,
+		"nq":   Nq,
+	*/
 	"call": Call,
 	"ret":  Ret,
 	"nop":  Nop,
@@ -70,22 +78,58 @@ func (o Op) String() string {
 }
 
 var OpToString = map[Op]string{
-	Mov:  "mov",
+	Mov: "mov",
+	Add: "add",
+	Sub: "sub",
+	Cmp: "cmp",
+
 	Push: "push",
 	Pop:  "pop",
 	Jmpt: "jmpt",
 	Jmpf: "jmpf",
-	Gt:   "gt",
-	Gteq: "gteq",
-	Lt:   "lt",
-	Lteq: "lteq",
-	Eq:   "eq",
-	Nq:   "nq",
-	Add:  "add",
-	Sub:  "sub",
+	/*
+		Gt:   "gt",
+		Gteq: "gteq",
+		Lt:   "lt",
+		Lteq: "lteq",
+		Eq:   "eq",
+		Nq:   "nq",
+	*/
 	Call: "call",
 	Ret:  "ret",
 	Nop:  "nop",
 	Stop: "stop",
 	Dbg:  "dbg",
+}
+
+type Cond byte
+
+const (
+	NoCond = iota
+	Eq
+	Gt
+	Gteq
+	Lt
+	Lteq
+)
+
+func (c Cond) String() string {
+	return CondToString[c]
+}
+
+var StringToCond = map[string]Cond{
+	"eq":   Eq,
+	"gt":   Gt,
+	"lt":   Lt,
+	"gteq": Gteq,
+	"lteq": Lteq,
+}
+
+var CondToString = map[Cond]string{
+	NoCond: "nocond",
+	Eq:     "eq",
+	Gt:     "gt",
+	Lt:     "lt",
+	Gteq:   "gteq",
+	Lteq:   "lteq",
 }

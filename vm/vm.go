@@ -88,48 +88,85 @@ func (vm *VM) Get(typ byte, loc byte) uint32 {
 func (vm *VM) Exec(code []byte) error {
 	var (
 		//callStack []uint32 // call stack
-		codePos = vm.registers[15] * 4
+		codePos          = vm.registers[15] * 4
+		conditionalValue int32
 	)
 
 	for int(codePos) < len(code) {
-
 		// loop, read and execute each op code
 		pc := vm.registers[15]
 		branch := pc // for branch tracking
 
-		instruction := binary.BigEndian.Uint32(code[codePos : codePos+32])
-		instr := asm.DecodeInstruction(instruction)
-
+		instr := asm.DecodeInstruction(binary.BigEndian.Uint32(code[codePos : codePos+4]))
 		if vm.debug {
-			fmt.Printf("instruction: %032b\n", instruction)
-			fmt.Printf("op=%s (pc=%d) dst=r%v ops1=r%d ops2=r%d I=%v S=%v value=%v\n", instr.Op, pc, instr.Dst, instr.Ops1, instr.Ops2, instr.Immediate, instr.S, instr.Value)
+			fmt.Printf("instruction: %032b\n", instr.Raw)
+			fmt.Printf("state: cv=%d\n", conditionalValue)
+			fmt.Printf("cond= %s op=%s (pc=%d) dst=r%v ops1=r%d ops2=r%d I=%v S=%v value=%v\n", instr.Cond, instr.Op, pc, instr.Dst, instr.Ops1, instr.Ops2, instr.Immediate, instr.S, instr.Value)
 		}
 
-		switch instr.Op {
-		case asm.Mov:
-			if instr.Immediate {
-				vm.Set(asm.Reg, byte(instr.Dst), instr.Value)
-			} else {
-				vm.Set(asm.Reg, byte(instr.Dst), vm.Get(asm.Reg, byte(instr.Ops1)))
+		// boolean determining whether we should skip the instruction
+		// based on the instructions conditional value.
+		var skipInstr bool
+		switch instr.Cond {
+		case asm.Eq:
+			if conditionalValue != 0 {
+				skipInstr = true
 			}
-			pc++
-		case asm.Add:
-			var ops2 uint32
-			if instr.Immediate {
-				ops2 = instr.Value
-			} else {
-				ops2 = vm.Get(asm.Reg, byte(instr.Ops2))
+		case asm.Lt:
+			if conditionalValue >= 0 {
+				skipInstr = true
 			}
-			vm.Set(asm.Reg, byte(instr.Dst), vm.Get(asm.Reg, byte(instr.Ops1))+ops2)
-			pc++
-		case asm.Sub:
-			var ops2 uint32
-			if instr.Immediate {
-				ops2 = instr.Value
-			} else {
-				ops2 = vm.Get(asm.Reg, byte(instr.Ops2))
+		case asm.Gt:
+			if conditionalValue <= 0 {
+				skipInstr = true
 			}
-			vm.Set(asm.Reg, byte(instr.Dst), vm.Get(asm.Reg, byte(instr.Ops1))-ops2)
+		case asm.Lteq:
+			if conditionalValue < 0 {
+				skipInstr = true
+			}
+		case asm.Gteq:
+			if conditionalValue > 0 {
+				skipInstr = true
+			}
+		}
+		conditionalValue = 0
+
+		if !skipInstr {
+			switch instr.Op {
+			case asm.Mov:
+				if instr.Immediate {
+					vm.Set(asm.Reg, byte(instr.Dst), instr.Value)
+				} else {
+					vm.Set(asm.Reg, byte(instr.Dst), vm.Get(asm.Reg, byte(instr.Ops1)))
+				}
+				pc++
+			case asm.Add:
+				var ops2 uint32
+				if instr.Immediate {
+					ops2 = instr.Value
+				} else {
+					ops2 = vm.Get(asm.Reg, byte(instr.Ops2))
+				}
+				vm.Set(asm.Reg, byte(instr.Dst), vm.Get(asm.Reg, byte(instr.Ops1))+ops2)
+				pc++
+			case asm.Sub:
+				var ops2 uint32
+				if instr.Immediate {
+					ops2 = instr.Value
+				} else {
+					ops2 = vm.Get(asm.Reg, byte(instr.Ops2))
+				}
+				vm.Set(asm.Reg, byte(instr.Dst), vm.Get(asm.Reg, byte(instr.Ops1))-ops2)
+				pc++
+			case asm.Cmp:
+				conditionalValue = int32(vm.Get(asm.Reg, byte(instr.Dst)) - vm.Get(asm.Reg, byte(instr.Ops1)))
+				pc++
+			}
+			// set conditional value if S is set
+			if instr.S {
+				conditionalValue = int32(vm.Get(asm.Reg, byte(instr.Dst)))
+			}
+		} else {
 			pc++
 		}
 

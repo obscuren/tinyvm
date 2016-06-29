@@ -6,8 +6,9 @@ import (
 )
 
 const (
-	CondPos          = 27
+	CondPos          = 28
 	ImmediateFlagPos = 24
+	SFlagPos         = 25
 	InstrPos         = 20
 	DstPos           = 16
 	Ops1Pos          = 12
@@ -16,12 +17,14 @@ const (
 )
 
 type Instruction struct {
-	Ca, Cb, Cc bool
-	S          bool
-	Op         Op
-	Dst        RegEntry
-	Ops1       RegEntry
-	Ops2       RegEntry
+	Raw uint32
+
+	Cond Cond
+	S    bool
+	Op   Op
+	Dst  RegEntry
+	Ops1 RegEntry
+	Ops2 RegEntry
 
 	Immediate bool
 	Value     uint32
@@ -29,9 +32,13 @@ type Instruction struct {
 
 func EncodeInstruction(instr Instruction) (uint32, error) {
 	var encoded uint32
+	encoded |= (uint32(instr.Cond) << CondPos)
 	encoded |= (uint32(instr.Op) << InstrPos)
 	encoded |= (uint32(instr.Dst) << DstPos)
 	encoded |= (uint32(instr.Ops1) << Ops1Pos)
+	if instr.S {
+		encoded |= 1 << SFlagPos
+	}
 	if instr.Immediate {
 		encoded |= 1 << ImmediateFlagPos
 		encodedValue, err := encodeImmediate(instr.Value)
@@ -47,9 +54,12 @@ func EncodeInstruction(instr Instruction) (uint32, error) {
 
 func DecodeInstruction(instruction uint32) Instruction {
 	var instr Instruction
+	instr.Raw = instruction
+	instr.Cond = Cond(getBits(instruction, CondPos, CondPos+3))
 	instr.Op = Op(getBits(instruction, InstrPos, InstrPos+3))
 	instr.Dst = RegEntry(getBits(instruction, DstPos, DstPos+3))
 	instr.Ops1 = RegEntry(getBits(instruction, Ops1Pos, Ops1Pos+3))
+	instr.S = isSet(instruction, SFlagPos)
 
 	if isSet(instruction, ImmediateFlagPos) {
 		instr.Immediate = true

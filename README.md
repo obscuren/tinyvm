@@ -22,6 +22,40 @@ that position and onward. In the future we'll allow labels to be specified in th
 `v.Set(asm.Reg, asm.R15, "my_label")`, but this has to be implemented in both the vm as well as
 the compiler who does not yet emit label information during the assembly stage of the "compiler".
 
+## Conditional execution
+
+TinyVM supports (like ARM) conditional execution e.g. `moveq` would only be executed if the
+conditional value were to be set to zero. The conditional value can be set by appending `s`
+to the mnemonic (e.g. `movs`, which sets the 25th bit) or by using the comparison instructions
+`cmp` and `tst`. By default data processing instructions do not set the condition code flag.
+
+An conditional execution must always be preceeded by a comparison instruction or an instruction
+with the conditional code bit set.
+
+## Instruction encoding
+
+The instruction scheme used by TinyVM is based on the ARM instruction scheme though with
+some arrangement in the ops order. TinyVM uses 4-bit rotation value (9th to 12th bit) to
+shift the 8-bit immediate value. This clever trick allows us to encode a lot of values in
+the range of `2^0..32` in only 12-bits. When an immediate value is encoded in `Ops2` the
+25th bit is set to 1, indicating an immediate value is encoded in the lower 12 bits of the
+instruction.
+
+The last 4 bits will be used for conditional execution (like ARM). Any instruction can be
+form of `operation[condition]` e.g. `addeq` for *add if equal* or `movgt` for *mov if
+greater than*.
+
+```
++--------------+---------+----------+----------+----------+----------+---------+---------+---------+
+| Bits         |31 .. 28 | 27 .. 24 | 23 .. 20 | 19 .. 16 | 15 .. 12 | 11 .. 8 | 7 ... 4 | 3 ... 0 |
++--------------+---------+----------+----------+----------+----------+---------+---------+---------+
+| Description  |  COND   |     SI   |    INS   |    Ds    |   Ops1   |   Ops2  |         |         |
++--------------+---------+----------+----------+----------+----------+---------+---------+---------+
+| mov r1 #260  |  0000   |   0001   |   1010   |   0001   |   0000   |   1111  |  0100   |   0001  |
+| mov r1 r2    |  0000   |   0000   |   1010   |   0001   |   0002   |   0000  |  0000   |   0000  |
++--------------+---------+----------+----------+----------+----------+---------+---------+---------+
+```
+
 ## Example
 
 ```asm
@@ -60,26 +94,3 @@ if err := v.Exec(code); err != nil {
 fmt.Println("exit:", v.Get(asm.Reg, asm.R0))
 ```
 
-## Instruction encoding
-
-The instruction scheme used by TinyVM is based on the ARM instruction scheme though with
-some arrangement in the ops order. TinyVM uses 4-bit rotation value (9th to 12th bit) to
-shift the 8-bit immediate value. This clever trick allows us to encode a lot of values in
-the range of `2^0..32` in only 12-bits. When an immediate value is encoded in `Ops2` the
-25th bit is set to 1, indicating an immediate value is encoded in the lower 12 bits of the
-instruction.
-
-The last 4 bits will be used for conditional execution (like ARM). Any instruction can be
-form of `operation[condition]` e.g. `addeq` for *add if equal* or `movgt` for *mov if
-greater than*.
-
-```
-+--------------+---------+----------+----------+----------+----------+---------+---------+---------+
-| Bits         |31 .. 28 | 27 .. 24 | 23 .. 20 | 19 .. 16 | 15 .. 12 | 11 .. 8 | 7 ... 4 | 3 ... 0 |
-+--------------+---------+----------+----------+----------+----------+---------+---------+---------+
-| Description  |  COND   |    I     |    INS   |    Ds    |   Op1    |    Op2  |         |         |
-+--------------+---------+----------+----------+----------+----------+---------+---------+---------+
-| mov r1 #260  |  0000   |   0001   |   1010   |   0001   |   0000   |   1111  |  0100   |   0001  |
-| mov r1 r2    |  0000   |   0000   |   1010   |   0001   |   0002   |   0000  |  0000   |   0000  |
-+--------------+---------+----------+----------+----------+----------+---------+---------+---------+
-```

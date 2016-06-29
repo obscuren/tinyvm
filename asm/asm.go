@@ -78,11 +78,76 @@ func (p parser) parse(code string) ([]byte, error) {
 			p.pc++
 
 			var (
-				op    = OpString[strings.TrimSpace(splitStr[0])]
-				instr Instruction
+				op  Op
+				con Cond
 			)
 
+			splitStr[0] = strings.TrimSpace(splitStr[0])
+			if len(splitStr[0]) > 2 {
+				switch splitStr[0][len(splitStr[0])-2:] {
+				case "gt":
+					con = Gt
+				case "lt":
+					con = Lt
+				case "eq":
+					con = Eq
+				}
+				if con != NoCond {
+					op = OpString[splitStr[0][:len(splitStr[0])-2]]
+				}
+			}
+			if len(splitStr[0]) > 4 {
+				switch splitStr[0][len(splitStr[0])-4:] {
+				case "gteq":
+					con = Gteq
+				case "lteq":
+					con = Lteq
+				}
+				if con != NoCond {
+					op = OpString[splitStr[0][:len(splitStr[0])-4]]
+				}
+			}
+
+			// yuck clean me up please
+			var sSet bool
+			if con == NoCond {
+				if splitStr[0][len(splitStr[0])-1] == 's' {
+					op = OpString[splitStr[0][:len(splitStr[0])-1]]
+					sSet = true
+				} else {
+					op = OpString[splitStr[0]]
+				}
+			}
+
+			var instr Instruction
+			instr = Instruction{
+				Cond: con,
+				Op:   op,
+				S:    sSet,
+			}
+
 			switch op {
+			case Cmp:
+				if len(splitStr) != 3 {
+					return nil, opArgError(op, 2, len(splitStr))
+				}
+				if !isRegister(splitStr[1]) {
+					return nil, fmt.Errorf("%s: dst must be register: %s", op, splitStr[1])
+				}
+				if !isRegister(splitStr[2]) {
+					return nil, fmt.Errorf("%s: ops1 must be register: %s", op, splitStr[1])
+				}
+
+				dst, err := strconv.Atoi(splitStr[1][1:])
+				if err != nil {
+					return nil, fmt.Errorf("%s: unexpected error: %v", op, err)
+				}
+				ops1, err := strconv.Atoi(splitStr[2][1:])
+				if err != nil {
+					return nil, fmt.Errorf("%s: unexpected error: %v", op, err)
+				}
+				instr.Dst = RegEntry(dst)
+				instr.Ops1 = RegEntry(ops1)
 			case Mov:
 				if len(splitStr) != 3 {
 					return nil, opArgError(op, 2, len(splitStr))
@@ -96,10 +161,7 @@ func (p parser) parse(code string) ([]byte, error) {
 					return nil, fmt.Errorf("%s: unexpected error: %v", op, err)
 				}
 
-				instr = Instruction{
-					Op:  op,
-					Dst: RegEntry(dst),
-				}
+				instr.Dst = RegEntry(dst)
 				if isImmediate(splitStr[2]) {
 					ops, err := strconv.Atoi(splitStr[2][1:])
 					if err != nil {
@@ -114,11 +176,6 @@ func (p parser) parse(code string) ([]byte, error) {
 					}
 					instr.Ops1 = RegEntry(ops)
 				}
-				encoded, err := EncodeInstruction(instr)
-				if err != nil {
-					return nil, fmt.Errorf("%s: unexpected error: %v", op, err)
-				}
-				binary.Write(writer, binary.BigEndian, encoded)
 			case Add, Sub:
 				if len(splitStr) != 4 {
 					return nil, opArgError(op, 3, len(splitStr))
@@ -139,11 +196,8 @@ func (p parser) parse(code string) ([]byte, error) {
 					return nil, fmt.Errorf("%s: unexpected error: %v", op, err)
 				}
 
-				instr = Instruction{
-					Op:   op,
-					Dst:  RegEntry(dst),
-					Ops1: RegEntry(ops1),
-				}
+				instr.Dst = RegEntry(dst)
+				instr.Ops1 = RegEntry(ops1)
 
 				ops2, err := strconv.Atoi(splitStr[3][1:])
 				if err != nil {
@@ -155,12 +209,12 @@ func (p parser) parse(code string) ([]byte, error) {
 				} else {
 					instr.Ops2 = RegEntry(ops2)
 				}
-				encoded, err := EncodeInstruction(instr)
-				if err != nil {
-					return nil, fmt.Errorf("%s: unexpected error: %v", op, err)
-				}
-				binary.Write(writer, binary.BigEndian, encoded)
 			}
+			encoded, err := EncodeInstruction(instr)
+			if err != nil {
+				return nil, fmt.Errorf("%s: unexpected error: %v", op, err)
+			}
+			binary.Write(writer, binary.BigEndian, encoded)
 			/*
 				p.parsedCode = append(p.parsedCode, byte(op))
 
