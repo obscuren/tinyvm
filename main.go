@@ -26,15 +26,19 @@ import (
 )
 
 var (
-	statFlag  = flag.Bool("vmstats", false, "display virtual machine stats")
-	printCode = flag.Bool("printcode", false, "prints executing code in hex")
-	debug     = flag.Bool("debug", false, "prints debug information during execution")
+	versionFlag = flag.Bool("version", false, "outputs version string")
+	statFlag    = flag.Bool("vmstats", false, "display virtual machine stats")
+	printCode   = flag.Bool("printcode", false, "prints executing code in hex")
+	debug       = flag.Bool("debug", false, "prints debug information during execution")
 )
 
 func main() {
 	flag.Parse()
 
-	fmt.Println("TinyVM", vm.VersionString, "- (c) Jeffrey Wilcke")
+	if *versionFlag {
+		fmt.Println("TinyVM", vm.VersionString, "- (c) Jeffrey Wilcke")
+		os.Exit(0)
+	}
 
 	var (
 		code []byte
@@ -75,17 +79,17 @@ func main() {
 		fmt.Println("err", err)
 		os.Exit(1)
 	}
-	fmt.Println("exit:", v.Get(asm.Reg, asm.R0))
-
 	if *statFlag {
 		v.Stats()
 	}
+
+	fmt.Println(v.Get(asm.Reg, asm.R0))
 }
 
 var registerFlags [asm.MaxRegister]*int
 
 func init() {
 	for i := 0; i < asm.MaxRegister; i++ {
-		registerFlags[i] = flag.Int(fmt.Sprintf("r%d", i), 0, fmt.Sprintf("sets the r%d register prior to execution", i))
+		registerFlags[i] = flag.Int(fmt.Sprintf("r%d", i), 0, fmt.Sprintf("sets the r%d register", i))
 	}
 }
