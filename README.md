@@ -138,21 +138,21 @@ loop:
 
 ## Appendix I
 
-All operations take at least 2 argument. The first argument (dst=destination) must be a register (`r#`).
+All operations take at least 2 argument. The first argument (`dst`=destination) must be a register (`r#`).
 
-| Opcode | Argument count | Description |
-|:------:|:--------------:|:-----------:|
-| `mov`  | 2              | Moves `ops1` in to register `dst`
-| `add`  | 3              | `ops1 + ops2` and sets the result to register `dst`
-| `sub`  | 3              | `ops1 - ops2` and sets the result to register `dst`
-| `rsb`  | 3              | `ops2 - ops1` and sets the result to register `dst`
-| `and`  | 3              | `ops1 & ops2` and sets the result to register `dst`
-| `xor`  | 3              | `ops1 ^ ops2` and sets the result to register `dst`
-| `orr`  | 3              | `ops1 | ops2` and sets the result to register `dst`
-| `cmp`  | 2              | `ops1 - ops2` and sets the result to the condition value
-| `ldr`  | 2              | Load word addressed by `ops1` from memory and store in `dst`
-| `str`  | 2              | Store word in`dst` at address `ops1`
-| `call` | 1              | sets `r15` to `dst` and pushes pc to the pc stack
-| `ret`  | 0              | pops the pc of the pc stack and sets `r15`. `len(stack)==0` halt execution
-| `stop` | 0              | halts execution
+| Opcode | Arg count | Example        | Description |
+|:------:|:---------:|----------------|-------------|
+| `mov`  | 2         | `mov r0 #1`    | Moves `ops1` in to register `dst`
+| `add`  | 3         | `add r0 r0 #1` | `ops1 + ops2` and sets the result to register `dst`
+| `sub`  | 3         | `sub r0 r0 #1` | `ops1 - ops2` and sets the result to register `dst`
+| `rsb`  | 3         | `rsb r0 r0 #1` | `ops2 - ops1` and sets the result to register `dst`
+| `and`  | 3         | `and r0 r0 #1` | `ops1 & ops2` and sets the result to register `dst`
+| `xor`  | 3         | `xor r0 r0 #1` | `ops1 ^ ops2` and sets the result to register `dst`
+| `orr`  | 3         | `orr r0 r0 #1` | `ops1 | ops2` and sets the result to register `dst`
+| `cmp`  | 2         | `cmp r0 r0`    | `ops1 - ops2` and sets the result to the condition value
+| `ldr`  | 2         | `ldr r0 r1`    | Load word addressed by `ops1` from memory and store in `dst`
+| `str`  | 2         | `str r0 r1`    | Store word in`dst` at address `ops1`
+| `call` | 1         | `call label`   | sets `r15` to `dst` and pushes pc to the pc stack
+| `ret`  | 0         | `ret`          | pops the pc of the pc stack and sets `r15`. `len(stack)==0` halt execution
+| `stop` | 0         | `stop`         | halts execution
 
