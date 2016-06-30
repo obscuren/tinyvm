@@ -151,7 +151,7 @@ func (a assembler) parseArgs(instr *Instruction, args []string) error {
 			}
 			instr.Ops1 = RegEntry(ops)
 		}
-	case Add, Sub:
+	case Add, Sub, Rsb, And, Xor, Orr:
 		if len(args) != 3 {
 			return opArgError(op, 3, len(args))
 		}

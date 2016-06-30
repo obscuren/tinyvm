@@ -34,6 +34,8 @@ that position and onward. In the future we'll allow labels to be specified in th
 `v.Set(asm.Reg, asm.R15, "my_label")`, but this has to be implemented in both the vm as well as
 the compiler who does not yet emit label information during the assembly stage of the "compiler".
 
+ See Appendix I for a list op assembly operations.
+
 ## Conditional execution
 
 TinyVM supports (like ARM) conditional execution e.g. `moveq` would only be executed if the
@@ -90,7 +92,7 @@ main:   ; main must be called with r0 and r1 set
 
 ```go
 // parse the source code
-code, err := asm.Parse(sourceCode)
+code, err := asm.Assemble(sourceCode)
 if err != nil {
     panic(err)
 }
@@ -125,3 +127,23 @@ loop:
 	subs	r0   r0 #1
 	movne	r15  loop
 ```
+
+
+## Appendix I
+
+All operations take at least 2 argument. The first argument (dst=destination) must be a register (`r#`).
+
+| Opcode | Argument count | Description |
+|:------:|:--------------:|:-----------:|
+| `mov`  | 2              | Moves `ops1` in to register `dst`
+| `add`  | 3              | `ops1 + ops2` and sets the result to register `dst`
+| `sub`  | 3              | `ops1 - ops2` and sets the result to register `dst`
+| `rsb`  | 3              | `ops2 - ops1` and sets the result to register `dst`
+| `and`  | 3              | `ops1 & ops2` and sets the result to register `dst`
+| `xor`  | 3              | `ops1 ^ ops2` and sets the result to register `dst`
+| `orr`  | 3              | `ops1 | ops2` and sets the result to register `dst`
+| `cmp`  | 2              | `ops1 - ops2` and sets the result to the condition value
+| `call` | 1              | sets `r15` to `dst` and pushes pc to the pc stack
+| `ret`  | 0              | pops the pc of the pc stack and sets `r15`. `len(stack)==0` halt execution
+| `stop` | 0              | halts execution
+

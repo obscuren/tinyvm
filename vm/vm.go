@@ -83,6 +83,16 @@ func (vm *VM) Get(typ byte, loc byte) uint32 {
 	panic(fmt.Sprintf("vm.Get: invalid get type %d on %d", typ, loc))
 }
 
+func getOps2(vm *VM, instr asm.Instruction) uint32 {
+	var ops2 uint32
+	if instr.Immediate {
+		ops2 = instr.Value
+	} else {
+		ops2 = vm.Get(asm.Reg, byte(instr.Ops2))
+	}
+	return ops2
+}
+
 // Exec executes the given byte code and returns the status of the
 // program as well as the return value.
 func (vm *VM) Exec(code []byte) error {
@@ -149,22 +159,36 @@ func (vm *VM) Exec(code []byte) error {
 				}
 				pc++
 			case asm.Add:
-				var ops2 uint32
-				if instr.Immediate {
-					ops2 = instr.Value
-				} else {
-					ops2 = vm.Get(asm.Reg, byte(instr.Ops2))
-				}
+				ops2 := getOps2(vm, instr)
+
 				vm.Set(asm.Reg, byte(instr.Dst), vm.Get(asm.Reg, byte(instr.Ops1))+ops2)
 				pc++
-			case asm.Sub:
-				var ops2 uint32
-				if instr.Immediate {
-					ops2 = instr.Value
+			case asm.Sub, asm.Rsb:
+				ops2 := getOps2(vm, instr)
+
+				var a, b uint32
+				if instr.Op == asm.Sub {
+					a, b = vm.Get(asm.Reg, byte(instr.Ops1)), ops2
 				} else {
-					ops2 = vm.Get(asm.Reg, byte(instr.Ops2))
+					a, b = ops2, vm.Get(asm.Reg, byte(instr.Ops1))
 				}
-				vm.Set(asm.Reg, byte(instr.Dst), vm.Get(asm.Reg, byte(instr.Ops1))-ops2)
+
+				vm.Set(asm.Reg, byte(instr.Dst), a-b)
+				pc++
+			case asm.And:
+				ops2 := getOps2(vm, instr)
+				vm.Set(asm.Reg, byte(instr.Dst), vm.Get(asm.Reg, byte(instr.Ops1))&ops2)
+
+				pc++
+			case asm.Xor:
+				ops2 := getOps2(vm, instr)
+				vm.Set(asm.Reg, byte(instr.Dst), vm.Get(asm.Reg, byte(instr.Ops1))^ops2)
+
+				pc++
+			case asm.Orr:
+				ops2 := getOps2(vm, instr)
+				vm.Set(asm.Reg, byte(instr.Dst), vm.Get(asm.Reg, byte(instr.Ops1))|ops2)
+
 				pc++
 			case asm.Cmp:
 				conditionalValue = int32(vm.Get(asm.Reg, byte(instr.Dst)) - vm.Get(asm.Reg, byte(instr.Ops1)))

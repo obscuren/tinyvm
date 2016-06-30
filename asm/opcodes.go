@@ -18,33 +18,37 @@ package asm
 type Op byte
 
 const (
-	Mov Op = iota
-	Add
-	Sub
+	Mov Op = iota // move data to register
+	Add           // addition operator (ops1 + ops2)
+	Sub           // subtraction operator (ops1 - ops2)
+	Rsb           // reverse subtraction operator (ops2 - ops1)
+	And           // logical and operator (ops1 AND ops2)
+	Xor           // exclusive or operator (ops1 XOR ops2)
+	Orr           // or operator (ops1 OR ops2)
 
 	Cmp
 
 	Call
 	Ret
 
-	Push
-	Pop
-
-	Jmpt
-
 	Stop
 	Nop
 )
 
 var OpString = map[string]Op{
-	"mov":  Mov,
-	"add":  Add,
-	"sub":  Sub,
-	"cmp":  Cmp,
-	"push": Push,
-	"pop":  Pop,
+	"mov": Mov,
+	"add": Add,
+	"sub": Sub,
+	"rsb": Rsb,
+	"and": And,
+	"xor": Xor,
+	"or":  Orr,
+
+	"cmp": Cmp,
+
 	"call": Call,
 	"ret":  Ret,
+
 	"nop":  Nop,
 	"stop": Stop,
 }
@@ -54,14 +58,19 @@ func (o Op) String() string {
 }
 
 var OpToString = map[Op]string{
-	Mov:  "mov",
-	Add:  "add",
-	Sub:  "sub",
-	Cmp:  "cmp",
-	Push: "push",
-	Pop:  "pop",
+	Mov: "mov",
+	Add: "add",
+	Sub: "sub",
+	Rsb: "rsb",
+	And: "and",
+	Xor: "xor",
+	Orr: "or",
+
+	Cmp: "cmp",
+
 	Call: "call",
 	Ret:  "ret",
+
 	Nop:  "nop",
 	Stop: "stop",
 }
