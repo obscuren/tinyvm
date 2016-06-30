@@ -68,7 +68,7 @@ func main() {
 
 	v := vm.New(*debug)
 	for i, registerFlag := range registerFlags {
-		v.Set(asm.Reg, byte(i), uint32(*registerFlag))
+		v.Set(asm.Reg, uint32(i), uint32(*registerFlag))
 	}
 
 	if err := v.Exec(code); err != nil {

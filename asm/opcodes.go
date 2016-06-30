@@ -15,9 +15,18 @@
 
 package asm
 
+type Mode byte
+
+const (
+	DataProcessing Mode = iota
+	DataTransfer
+	Branching
+)
+
 type Op byte
 
 const (
+	// Data processing op codes
 	Mov Op = iota // move data to register
 	Add           // addition operator (ops1 + ops2)
 	Sub           // subtraction operator (ops1 - ops2)
@@ -25,14 +34,18 @@ const (
 	And           // logical and operator (ops1 AND ops2)
 	Xor           // exclusive or operator (ops1 XOR ops2)
 	Orr           // or operator (ops1 OR ops2)
-
 	Cmp
-
-	Call
-	Ret
 
 	Stop
 	Nop
+
+	// Data transfer op codes
+	Ldr Op = iota // Load data
+	Str           // Store data
+
+	// Branching op codes
+	Call Op = iota
+	Ret
 )
 
 var OpString = map[string]Op{
@@ -43,14 +56,16 @@ var OpString = map[string]Op{
 	"and": And,
 	"xor": Xor,
 	"or":  Orr,
-
 	"cmp": Cmp,
-
-	"call": Call,
-	"ret":  Ret,
 
 	"nop":  Nop,
 	"stop": Stop,
+
+	"ldr": Ldr,
+	"str": Str,
+
+	"call": Call,
+	"ret":  Ret,
 }
 
 func (o Op) String() string {
@@ -65,14 +80,16 @@ var OpToString = map[Op]string{
 	And: "and",
 	Xor: "xor",
 	Orr: "or",
-
 	Cmp: "cmp",
-
-	Call: "call",
-	Ret:  "ret",
 
 	Nop:  "nop",
 	Stop: "stop",
+
+	Ldr: "ldr",
+	Str: "str",
+
+	Call: "call",
+	Ret:  "ret",
 }
 
 type Cond byte

@@ -54,26 +54,26 @@ func New(debug bool) *VM {
 
 // Set sets the value to the receivers location. The receiver can be either
 // register or memory.
-func (vm *VM) Set(typ byte, loc byte, value uint32) {
+func (vm *VM) Set(typ byte, loc uint32, value uint32) {
 	switch typ {
 	case asm.Reg:
 		vm.registers[loc] = value
 	case asm.Mem:
-		vm.memory[uint32(loc)] = value
+		vm.memory[loc] = value
 	case asm.Stack:
 		vm.stack = append(vm.stack, value)
 	}
 }
 
 // Get retrieves the value from the given storage type's location.
-func (vm *VM) Get(typ byte, loc byte) uint32 {
+func (vm *VM) Get(typ byte, loc uint32) uint32 {
 	switch typ {
 	case asm.Reg:
-		return vm.registers[loc]
+		return vm.registers[byte(loc)]
 	case asm.Mem:
-		return vm.memory[uint32(loc)]
+		return vm.memory[loc]
 	case asm.Dec:
-		return uint32(loc)
+		return loc
 	case asm.Stack:
 		stackItem := vm.stack[len(vm.stack)-1]
 		vm.stack = vm.stack[:len(vm.stack)-1]
@@ -88,7 +88,17 @@ func getOps2(vm *VM, instr asm.Instruction) uint32 {
 	if instr.Immediate {
 		ops2 = instr.Value
 	} else {
-		ops2 = vm.Get(asm.Reg, byte(instr.Ops2))
+		ops2 = vm.Get(asm.Reg, uint32(instr.Ops2))
+	}
+	return ops2
+}
+
+func getOps1(vm *VM, instr asm.Instruction) uint32 {
+	var ops2 uint32
+	if instr.Immediate {
+		ops2 = instr.Value
+	} else {
+		ops2 = vm.Get(asm.Reg, uint32(instr.Ops1))
 	}
 	return ops2
 }
@@ -112,7 +122,7 @@ func (vm *VM) Exec(code []byte) error {
 		if vm.debug {
 			fmt.Printf("instruction: %032b\n", instr.Raw)
 			fmt.Printf("state: cv=%d\n", conditionalValue)
-			fmt.Printf("cond= %s op=%s (pc=%d) dst=r%v ops1=r%d ops2=r%d I=%v S=%v value=%v\n", instr.Cond, instr.Op, pc, instr.Dst, instr.Ops1, instr.Ops2, instr.Immediate, instr.S, instr.Value)
+			fmt.Printf("cond= %s m=%v op=%s (pc=%d) dst=r%v ops1=r%d ops2=r%d I=%v S=%v value=%v\n", instr.Cond, instr.Mode, instr.Op, pc, instr.Dst, instr.Ops1, instr.Ops2, instr.Immediate, instr.S, instr.Value)
 		}
 
 		// boolean determining whether we should skip the instruction
@@ -150,68 +160,80 @@ func (vm *VM) Exec(code []byte) error {
 		// instructions are skipped based on the conditional value
 		// and the instruction condition.
 		if !skipInstr {
-			switch instr.Op {
-			case asm.Mov:
-				if instr.Immediate {
-					vm.Set(asm.Reg, byte(instr.Dst), instr.Value)
-				} else {
-					vm.Set(asm.Reg, byte(instr.Dst), vm.Get(asm.Reg, byte(instr.Ops1)))
-				}
-				pc++
-			case asm.Add:
-				ops2 := getOps2(vm, instr)
+			switch instr.Mode {
+			case asm.DataProcessing:
+				switch instr.Op {
+				case asm.Mov:
+					vm.Set(asm.Reg, uint32(instr.Dst), getOps1(vm, instr))
+					pc++
+				case asm.Add:
+					ops2 := getOps2(vm, instr)
 
-				vm.Set(asm.Reg, byte(instr.Dst), vm.Get(asm.Reg, byte(instr.Ops1))+ops2)
-				pc++
-			case asm.Sub, asm.Rsb:
-				ops2 := getOps2(vm, instr)
+					vm.Set(asm.Reg, uint32(instr.Dst), vm.Get(asm.Reg, uint32(instr.Ops1))+ops2)
+					pc++
+				case asm.Sub, asm.Rsb:
+					ops2 := getOps2(vm, instr)
 
-				var a, b uint32
-				if instr.Op == asm.Sub {
-					a, b = vm.Get(asm.Reg, byte(instr.Ops1)), ops2
-				} else {
-					a, b = ops2, vm.Get(asm.Reg, byte(instr.Ops1))
-				}
+					var a, b uint32
+					if instr.Op == asm.Sub {
+						a, b = vm.Get(asm.Reg, uint32(instr.Ops1)), ops2
+					} else {
+						a, b = ops2, vm.Get(asm.Reg, uint32(instr.Ops1))
+					}
 
-				vm.Set(asm.Reg, byte(instr.Dst), a-b)
-				pc++
-			case asm.And:
-				ops2 := getOps2(vm, instr)
-				vm.Set(asm.Reg, byte(instr.Dst), vm.Get(asm.Reg, byte(instr.Ops1))&ops2)
+					vm.Set(asm.Reg, uint32(instr.Dst), a-b)
+					pc++
+				case asm.And:
+					ops2 := getOps2(vm, instr)
+					vm.Set(asm.Reg, uint32(instr.Dst), vm.Get(asm.Reg, uint32(instr.Ops1))&ops2)
 
-				pc++
-			case asm.Xor:
-				ops2 := getOps2(vm, instr)
-				vm.Set(asm.Reg, byte(instr.Dst), vm.Get(asm.Reg, byte(instr.Ops1))^ops2)
+					pc++
+				case asm.Xor:
+					ops2 := getOps2(vm, instr)
+					vm.Set(asm.Reg, uint32(instr.Dst), vm.Get(asm.Reg, uint32(instr.Ops1))^ops2)
 
-				pc++
-			case asm.Orr:
-				ops2 := getOps2(vm, instr)
-				vm.Set(asm.Reg, byte(instr.Dst), vm.Get(asm.Reg, byte(instr.Ops1))|ops2)
+					pc++
+				case asm.Orr:
+					ops2 := getOps2(vm, instr)
+					vm.Set(asm.Reg, uint32(instr.Dst), vm.Get(asm.Reg, uint32(instr.Ops1))|ops2)
 
-				pc++
-			case asm.Cmp:
-				conditionalValue = int32(vm.Get(asm.Reg, byte(instr.Dst)) - vm.Get(asm.Reg, byte(instr.Ops1)))
-				pc++
-			case asm.Call:
-				callStack = append(callStack, pc+1)
-				vm.Set(asm.Reg, byte(asm.R15), instr.Value)
-			case asm.Ret:
-				if len(callStack) == 0 {
+					pc++
+				case asm.Cmp:
+					conditionalValue = int32(vm.Get(asm.Reg, uint32(instr.Dst)) - vm.Get(asm.Reg, uint32(instr.Ops1)))
+					pc++
+				case asm.Stop:
 					return nil
+				case asm.Nop:
+					pc++
+				default:
+					return fmt.Errorf("invalid opcode: %d", instr.Op)
 				}
-				pc = callStack[len(callStack)-1]
-				callStack = callStack[:len(callStack)-1]
-			case asm.Stop:
-				return nil
-			case asm.Nop:
-				pc++
-			default:
-				return fmt.Errorf("invalid opcode: %d", instr.Op)
+			case asm.DataTransfer:
+				switch instr.Op {
+				case asm.Ldr:
+					vm.Set(asm.Reg, uint32(instr.Dst), vm.Get(asm.Mem, getOps1(vm, instr)))
+
+					pc++
+				case asm.Str:
+					vm.Set(asm.Mem, getOps1(vm, instr), vm.Get(asm.Reg, uint32(instr.Dst)))
+					pc++
+				}
+			case asm.Branching:
+				switch instr.Op {
+				case asm.Call:
+					callStack = append(callStack, pc+1)
+					vm.Set(asm.Reg, uint32(asm.R15), instr.Value)
+				case asm.Ret:
+					if len(callStack) == 0 {
+						return nil
+					}
+					pc = callStack[len(callStack)-1]
+					callStack = callStack[:len(callStack)-1]
+				}
 			}
 			// set conditional value if S is set
 			if instr.S {
-				conditionalValue = int32(vm.Get(asm.Reg, byte(instr.Dst)))
+				conditionalValue = int32(vm.Get(asm.Reg, uint32(instr.Dst)))
 			}
 		} else {
 			// increment the program counter

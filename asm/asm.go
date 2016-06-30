@@ -194,6 +194,39 @@ func (a assembler) parseArgs(instr *Instruction, args []string) error {
 			a.setLabels[a.pc] = args[0]
 		}
 		instr.Dst = RegEntry(ops)
+		instr.Mode = Branching
+	case Ret:
+		instr.Mode = Branching
+	case Ldr, Str:
+		if len(args) != 2 {
+			return opArgError(op, 2, len(args))
+		}
+		if !isRegister(args[0]) {
+			return fmt.Errorf("%s: dst must be register: %s", op, args[0])
+		}
+
+		dst, err := strconv.Atoi(args[0][1:])
+		if err != nil {
+			return fmt.Errorf("%s: unexpected error: %v", op, err)
+		}
+
+		instr.Dst = RegEntry(dst)
+		if isImmediate(args[1]) {
+			ops, err := strconv.Atoi(args[1][1:])
+			if err != nil {
+				return fmt.Errorf("%s: unexepected error: %v", op, err)
+			}
+			instr.Immediate = true
+			instr.Value = uint32(ops)
+		} else {
+			ops, err := strconv.Atoi(args[1][1:])
+			if err != nil {
+				// Expect a string. TODO fix this
+				a.setLabels[a.pc] = args[1]
+			}
+			instr.Ops1 = RegEntry(ops)
+		}
+		instr.Mode = DataTransfer
 	}
 	return nil
 }

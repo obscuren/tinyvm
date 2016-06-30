@@ -7,6 +7,7 @@ import (
 
 const (
 	CondPos          = 28
+	ModePos          = 26
 	ImmediateFlagPos = 24
 	SFlagPos         = 25
 	InstrPos         = 20
@@ -19,6 +20,7 @@ const (
 type Instruction struct {
 	Raw uint32
 
+	Mode Mode
 	Cond Cond
 	S    bool
 	Op   Op
@@ -33,6 +35,7 @@ type Instruction struct {
 func EncodeInstruction(instr Instruction) (uint32, error) {
 	var encoded uint32
 	encoded |= (uint32(instr.Cond) << CondPos)
+	encoded |= (uint32(instr.Mode) << ModePos)
 	encoded |= (uint32(instr.Op) << InstrPos)
 	encoded |= (uint32(instr.Dst) << DstPos)
 	encoded |= (uint32(instr.Ops1) << Ops1Pos)
@@ -56,6 +59,7 @@ func DecodeInstruction(instruction uint32) Instruction {
 	var instr Instruction
 	instr.Raw = instruction
 	instr.Cond = Cond(getBits(instruction, CondPos, CondPos+3))
+	instr.Mode = Mode(getBits(instruction, ModePos, ModePos+1))
 	instr.Op = Op(getBits(instruction, InstrPos, InstrPos+3))
 	instr.Dst = RegEntry(getBits(instruction, DstPos, DstPos+3))
 	instr.Ops1 = RegEntry(getBits(instruction, Ops1Pos, Ops1Pos+3))

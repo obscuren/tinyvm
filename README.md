@@ -59,11 +59,18 @@ The last 4 bits will be used for conditional execution (like ARM). Any instructi
 form of `operation[condition]` e.g. `addeq` for *add if equal* or `movgt` for *mov if
 greater than*.
 
+Instructions can be in several modes stored in bit 27 and 26. TinyVM supports the following modes:
+
+- `00` Data processing
+- `01` Data transfer
+- `10` Branching
+- `11` (reserved / unused)
+
 ```
 +--------------+---------+----------+----------+----------+----------+---------+---------+---------+
 | Bits         |31 .. 28 | 27 .. 24 | 23 .. 20 | 19 .. 16 | 15 .. 12 | 11 .. 8 | 7 ... 4 | 3 ... 0 |
 +--------------+---------+----------+----------+----------+----------+---------+---------+---------+
-| Description  |  COND   |     SI   |    INS   |    Ds    |   Ops1   |   Ops2  |         |         |
+| Description  |  COND   |   DDSI   |    INS   |    Ds    |   Ops1   |   Ops2  |         |         |
 +--------------+---------+----------+----------+----------+----------+---------+---------+---------+
 | mov r1 #260  |  0000   |   0001   |   1010   |   0001   |   0000   |   1111  |  0100   |   0001  |
 | mov r1 r2    |  0000   |   0000   |   1010   |   0001   |   0002   |   0000  |  0000   |   0000  |
@@ -143,6 +150,8 @@ All operations take at least 2 argument. The first argument (dst=destination) mu
 | `xor`  | 3              | `ops1 ^ ops2` and sets the result to register `dst`
 | `orr`  | 3              | `ops1 | ops2` and sets the result to register `dst`
 | `cmp`  | 2              | `ops1 - ops2` and sets the result to the condition value
+| `ldr`  | 2              | Load word addressed by `ops1` from memory and store in `dst`
+| `str`  | 2              | Store word in`dst` at address `ops1`
 | `call` | 1              | sets `r15` to `dst` and pushes pc to the pc stack
 | `ret`  | 0              | pops the pc of the pc stack and sets `r15`. `len(stack)==0` halt execution
 | `stop` | 0              | halts execution
