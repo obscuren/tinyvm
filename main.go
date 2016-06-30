@@ -47,7 +47,7 @@ func main() {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		code, err = asm.Parse(string(code))
+		code, err = asm.Assemble(string(code))
 	} else {
 		err = fmt.Errorf("Usage: tinyvm <flags> filename")
 	}
