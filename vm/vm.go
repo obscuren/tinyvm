@@ -145,11 +145,11 @@ func (vm *VM) Exec(code []byte) error {
 			if conditionalValue <= 0 {
 				skipInstr = true
 			}
-		case asm.Lteq:
+		case asm.Lte:
 			if conditionalValue < 0 {
 				skipInstr = true
 			}
-		case asm.Gteq:
+		case asm.Gte:
 			if conditionalValue > 0 {
 				skipInstr = true
 			}
@@ -183,6 +183,16 @@ func (vm *VM) Exec(code []byte) error {
 
 					vm.Set(asm.Reg, uint32(instr.Dst), a-b)
 					pc++
+				case asm.Mul:
+					ops2 := getOps2(vm, instr)
+
+					vm.Set(asm.Reg, uint32(instr.Dst), vm.Get(asm.Reg, uint32(instr.Ops1))*ops2)
+					pc++
+				case asm.Div:
+					ops2 := getOps2(vm, instr)
+
+					vm.Set(asm.Reg, uint32(instr.Dst), vm.Get(asm.Reg, uint32(instr.Ops1))/ops2)
+					pc++
 				case asm.And:
 					ops2 := getOps2(vm, instr)
 					vm.Set(asm.Reg, uint32(instr.Dst), vm.Get(asm.Reg, uint32(instr.Ops1))&ops2)
@@ -200,10 +210,6 @@ func (vm *VM) Exec(code []byte) error {
 					pc++
 				case asm.Cmp:
 					conditionalValue = int32(vm.Get(asm.Reg, uint32(instr.Dst)) - vm.Get(asm.Reg, uint32(instr.Ops1)))
-					pc++
-				case asm.Stop:
-					return nil
-				case asm.Nop:
 					pc++
 				default:
 					return fmt.Errorf("invalid opcode: %d", instr.Op)

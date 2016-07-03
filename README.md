@@ -146,6 +146,8 @@ All operations take at least 2 argument. The first argument (`dst`=destination) 
 | `add`  | 3         | `add r0 r0 #1` | `ops1 + ops2` and sets the result to register `dst`
 | `sub`  | 3         | `sub r0 r0 #1` | `ops1 - ops2` and sets the result to register `dst`
 | `rsb`  | 3         | `rsb r0 r0 #1` | `ops2 - ops1` and sets the result to register `dst`
+| `mul`  | 3         | `mul r0 r0 #1` | `ops2 * ops1` and sets the result to register `dst`
+| `div`  | 3         | `mul r0 r0 #1` | `ops2 / ops1` and sets the result to register `dst`
 | `and`  | 3         | `and r0 r0 #1` | `ops1 & ops2` and sets the result to register `dst`
 | `xor`  | 3         | `xor r0 r0 #1` | `ops1 ^ ops2` and sets the result to register `dst`
 | `orr`  | 3         | `orr r0 r0 #1` | `ops1 | ops2` and sets the result to register `dst`
@@ -154,5 +156,4 @@ All operations take at least 2 argument. The first argument (`dst`=destination) 
 | `str`  | 2         | `str r0 r1`    | Store word in`dst` at address `ops1`
 | `call` | 1         | `call label`   | sets `r15` to `dst` and pushes pc to the pc stack
 | `ret`  | 0         | `ret`          | pops the pc of the pc stack and sets `r15`. `len(stack)==0` halt execution
-| `stop` | 0         | `stop`         | halts execution
 

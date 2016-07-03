@@ -5,5 +5,3 @@ add:    ; add taket two arguments
 
 main:   ; main must be called with r0 and r1 set
 	call 	add
-
-	stop

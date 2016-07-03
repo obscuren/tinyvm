@@ -54,7 +54,6 @@ func (p assembler) assemble(code string) ([]byte, error) {
 		case isLabel(line):
 			line = strings.TrimSuffix(line, labelType)
 			p.labels[line] = p.pc
-			p.parsedCode = append(p.parsedCode, byte(Nop))
 			// decrement program counter as a measure of "ignore"
 			// this "instruction".
 			p.pc--
@@ -151,7 +150,7 @@ func (a assembler) parseArgs(instr *Instruction, args []string) error {
 			}
 			instr.Ops1 = RegEntry(ops)
 		}
-	case Add, Sub, Rsb, And, Xor, Orr:
+	case Add, Sub, Mul, Div, Rsb, And, Xor, Orr:
 		if len(args) != 3 {
 			return opArgError(op, 3, len(args))
 		}
@@ -240,10 +239,10 @@ func (a assembler) parseOp(strOp string) (Op, Cond, bool) {
 	)
 	if len(strOp) > 4 {
 		switch strOp[len(strOp)-4:] {
-		case "gteq":
-			con = Gteq
-		case "lteq":
-			con = Lteq
+		case "gte":
+			con = Gte
+		case "lte":
+			con = Lte
 		}
 		if con != NoCond {
 			op = OpString[strOp[:len(strOp)-4]]

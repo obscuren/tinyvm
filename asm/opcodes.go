@@ -31,13 +31,12 @@ const (
 	Add           // addition operator (ops1 + ops2)
 	Sub           // subtraction operator (ops1 - ops2)
 	Rsb           // reverse subtraction operator (ops2 - ops1)
+	Mul           // multiplicaton operator (ops1 x ops2)
+	Div           // division operator (ops1 / ops2)
 	And           // logical and operator (ops1 AND ops2)
 	Xor           // exclusive or operator (ops1 XOR ops2)
 	Orr           // or operator (ops1 OR ops2)
 	Cmp
-
-	Stop
-	Nop
 
 	// Data transfer op codes
 	Ldr Op = iota // Load data
@@ -53,13 +52,12 @@ var OpString = map[string]Op{
 	"add": Add,
 	"sub": Sub,
 	"rsb": Rsb,
+	"mul": Mul,
+	"div": Div,
 	"and": And,
 	"xor": Xor,
 	"or":  Orr,
 	"cmp": Cmp,
-
-	"nop":  Nop,
-	"stop": Stop,
 
 	"ldr": Ldr,
 	"str": Str,
@@ -77,13 +75,12 @@ var OpToString = map[Op]string{
 	Add: "add",
 	Sub: "sub",
 	Rsb: "rsb",
+	Mul: "mul",
+	Div: "div",
 	And: "and",
 	Xor: "xor",
 	Orr: "or",
 	Cmp: "cmp",
-
-	Nop:  "nop",
-	Stop: "stop",
 
 	Ldr: "ldr",
 	Str: "str",
@@ -96,12 +93,12 @@ type Cond byte
 
 const (
 	NoCond = iota
-	Eq
-	Ne
-	Gt
-	Gteq
-	Lt
-	Lteq
+	Eq     // equal
+	Ne     // not equal
+	Gt     // greater than
+	Lt     // less than
+	Gte    // greater than or equal
+	Lte    // less than or equal
 )
 
 func (c Cond) String() string {
@@ -109,12 +106,12 @@ func (c Cond) String() string {
 }
 
 var StringToCond = map[string]Cond{
-	"eq":   Eq,
-	"ne":   Ne,
-	"gt":   Gt,
-	"lt":   Lt,
-	"gteq": Gteq,
-	"lteq": Lteq,
+	"eq":  Eq,
+	"ne":  Ne,
+	"gt":  Gt,
+	"lt":  Lt,
+	"gte": Gte,
+	"lte": Lte,
 }
 
 var CondToString = map[Cond]string{
@@ -123,6 +120,6 @@ var CondToString = map[Cond]string{
 	Ne:     "ne",
 	Gt:     "gt",
 	Lt:     "lt",
-	Gteq:   "gteq",
-	Lteq:   "lteq",
+	Gte:    "gte",
+	Lte:    "lte",
 }
