@@ -36,6 +36,8 @@ const (
 	And           // logical and operator (ops1 AND ops2)
 	Xor           // exclusive or operator (ops1 XOR ops2)
 	Orr           // or operator (ops1 OR ops2)
+	Lsl           // logical shift left (ops1 << ops2)
+	Lsr           // logical shift right (ops1 >> ops2)
 	Cmp
 
 	// Data transfer op codes
@@ -57,6 +59,8 @@ var OpString = map[string]Op{
 	"and": And,
 	"xor": Xor,
 	"or":  Orr,
+	"lsl": Lsl,
+	"lsr": Lsr,
 	"cmp": Cmp,
 
 	"ldr": Ldr,
@@ -80,6 +84,8 @@ var OpToString = map[Op]string{
 	And: "and",
 	Xor: "xor",
 	Orr: "or",
+	Lsl: "lsl",
+	Lsr: "lsr",
 	Cmp: "cmp",
 
 	Ldr: "ldr",

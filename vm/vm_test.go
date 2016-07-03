@@ -21,6 +21,8 @@ func TestExecution(t *testing.T) {
 		{"mov r0 #1\nand r0 r0 #2", 0},
 		{"mov r0 #2\nxor r0 r0 #1", 3},
 		{"mov r0 #1\norr r0 r0 #2", 1},
+		{"mov r0 #1\nlsl r0 r0 #1", 2},
+		{"mov r0 #2\nlsr r0 r0 #1", 1},
 	} {
 		code, err := asm.Assemble(test.code)
 		if err != nil {

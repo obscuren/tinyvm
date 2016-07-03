@@ -208,6 +208,16 @@ func (vm *VM) Exec(code []byte) error {
 					vm.Set(asm.Reg, uint32(instr.Dst), vm.Get(asm.Reg, uint32(instr.Ops1))|ops2)
 
 					pc++
+				case asm.Lsl:
+					ops2 := getOps2(vm, instr)
+					vm.Set(asm.Reg, uint32(instr.Dst), vm.Get(asm.Reg, uint32(instr.Ops1))<<ops2)
+
+					pc++
+				case asm.Lsr:
+					ops2 := getOps2(vm, instr)
+					vm.Set(asm.Reg, uint32(instr.Dst), vm.Get(asm.Reg, uint32(instr.Ops1))>>ops2)
+
+					pc++
 				case asm.Cmp:
 					conditionalValue = int32(vm.Get(asm.Reg, uint32(instr.Dst)) - vm.Get(asm.Reg, uint32(instr.Ops1)))
 					pc++
