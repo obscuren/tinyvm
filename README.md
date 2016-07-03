@@ -122,6 +122,20 @@ fmt.Println("exit:", v.Get(asm.Reg, asm.R0))
 
 ### ASM samples
 
+#### Jumping
+
+Register `r15` is used to keep track of the program counter (`pc`). Setting register
+`r15` allows you to jump to another position during execution (using labels is permitted):
+
+```asm
+	mov 	r15 main
+	mov 	r0  #1
+main:
+```
+
+Instruction `mov r0 #1` should be ignored and register `0` should be left empty.
+
+
 #### Counter
 
 The following code fragment is a loop which runs until the counter in `r0` hits zero
@@ -157,3 +171,10 @@ All operations take at least 2 argument. The first argument (`dst`=destination) 
 | `call` | 1         | `call label`   | sets `r15` to `dst` and pushes pc to the pc stack
 | `ret`  | 0         | `ret`          | pops the pc of the pc stack and sets `r15`. `len(stack)==0` halt execution
 
+
+# TODO
+
+* Add conditional-execution tests
+* Add assembler tests
+* Rewrite memory implementation. Current memory model is temporarily.
+* Implement a proper stack mechanism. Current call stack is temporarily.
