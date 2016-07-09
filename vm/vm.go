@@ -28,6 +28,8 @@ const (
 	Major = 0 // Major version
 	Minor = 0 // Minor version
 	Patch = 1 // Patch version
+
+	StackSize = 1024
 )
 
 // VesionString represents the full version, including the name
@@ -38,18 +40,19 @@ var VersionString = fmt.Sprintf("%d.%d.%d", Major, Minor, Patch)
 // registers and data pointers.
 type VM struct {
 	registers [asm.MaxRegister]uint32 // general purpose registers
-	memory    map[uint32]uint32       // memory addressed by pointer
-	stack     []uint32
+	memory    []uint32                // memory
 
 	debug bool
 }
 
 // New returns a new initialised VM.
 func New(debug bool) *VM {
-	return &VM{
-		memory: make(map[uint32]uint32),
+	vm := &VM{
+		memory: make([]uint32, StackSize),
 		debug:  debug,
 	}
+	vm.Set(asm.Reg, asm.R13, StackSize-1)
+	return vm
 }
 
 // Set sets the value to the receivers location. The receiver can be either
@@ -60,8 +63,6 @@ func (vm *VM) Set(typ byte, loc uint32, value uint32) {
 		vm.registers[loc] = value
 	case asm.Mem:
 		vm.memory[loc] = value
-	case asm.Stack:
-		vm.stack = append(vm.stack, value)
 	}
 }
 
@@ -74,10 +75,6 @@ func (vm *VM) Get(typ byte, loc uint32) uint32 {
 		return vm.memory[loc]
 	case asm.Dec:
 		return loc
-	case asm.Stack:
-		stackItem := vm.stack[len(vm.stack)-1]
-		vm.stack = vm.stack[:len(vm.stack)-1]
-		return stackItem
 	}
 
 	panic(fmt.Sprintf("vm.Get: invalid get type %d on %d", typ, loc))
@@ -180,6 +177,7 @@ func (vm *VM) Exec(code []byte) error {
 					} else {
 						a, b = ops2, vm.Get(asm.Reg, uint32(instr.Ops1))
 					}
+					fmt.Println(a, b)
 
 					vm.Set(asm.Reg, uint32(instr.Dst), a-b)
 					pc++
@@ -226,11 +224,11 @@ func (vm *VM) Exec(code []byte) error {
 				}
 			case asm.DataTransfer:
 				switch instr.Op {
-				case asm.Ldr:
+				case asm.Ldm:
 					vm.Set(asm.Reg, uint32(instr.Dst), vm.Get(asm.Mem, getOps1(vm, instr)))
 
 					pc++
-				case asm.Str:
+				case asm.Stm:
 					vm.Set(asm.Mem, getOps1(vm, instr), vm.Get(asm.Reg, uint32(instr.Dst)))
 					pc++
 				}
@@ -295,7 +293,4 @@ func (vm *VM) Stats() {
 	}
 
 	fmt.Println()
-	fmt.Println("stack:")
-	fmt.Printf("%x\n", vm.stack)
-
 }

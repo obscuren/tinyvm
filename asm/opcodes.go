@@ -41,12 +41,16 @@ const (
 	Cmp
 
 	// Data transfer op codes
-	Ldr Op = iota // Load data
-	Str           // Store data
+	Ldm Op = iota // Load memory
+	Stm           // Store memory
 
 	// Branching op codes
 	Call Op = iota
 	Ret
+
+	// Pseudo opcodes
+	Push Op = 64 + iota
+	Pop
 )
 
 var OpString = map[string]Op{
@@ -58,17 +62,23 @@ var OpString = map[string]Op{
 	"div": Div,
 	"and": And,
 	"xor": Xor,
-	"or":  Orr,
+	"orr": Orr,
 	"lsl": Lsl,
 	"lsr": Lsr,
 	"cmp": Cmp,
 
-	"ldr": Ldr,
-	"str": Str,
+	"ldm": Ldm,
+	"stm": Stm,
 
 	"call": Call,
 	"ret":  Ret,
+
+	// pseudo codes
+	"push": Push,
+	"pop":  Pop,
 }
+
+var PseudoOpcodes = map[Op]bool{Push: true, Pop: true}
 
 func (o Op) String() string {
 	return OpToString[o]
@@ -83,16 +93,19 @@ var OpToString = map[Op]string{
 	Div: "div",
 	And: "and",
 	Xor: "xor",
-	Orr: "or",
+	Orr: "orr",
 	Lsl: "lsl",
 	Lsr: "lsr",
 	Cmp: "cmp",
 
-	Ldr: "ldr",
-	Str: "str",
+	Ldm: "ldm",
+	Stm: "stm",
 
 	Call: "call",
 	Ret:  "ret",
+
+	Push: "push",
+	Pop:  "pop",
 }
 
 type Cond byte

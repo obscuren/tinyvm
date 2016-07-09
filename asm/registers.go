@@ -36,6 +36,10 @@ const (
 	R14
 	R15
 	MaxRegister
+
+	SP = R13
+	LR = R14
+	PC = R15
 )
 
 var RegToString = map[RegEntry]string{
@@ -55,4 +59,27 @@ var RegToString = map[RegEntry]string{
 	R13: "r13",
 	R14: "r14",
 	R15: "r15",
+}
+
+var StringToReg = map[string]RegEntry{
+	"r0":  R0,
+	"r1":  R1,
+	"r2":  R2,
+	"r3":  R3,
+	"r4":  R4,
+	"r5":  R5,
+	"r6":  R6,
+	"r7":  R7,
+	"r8":  R8,
+	"r9":  R9,
+	"r10": R10,
+	"r11": R11,
+	"r12": R12,
+	"r13": R13,
+	"r14": R14,
+	"r15": R15,
+
+	"sp": SP,
+	"lr": LR,
+	"pc": PC,
 }

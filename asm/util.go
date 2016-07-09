@@ -23,3 +23,7 @@ func isRegister(s string) bool {
 func isImmediate(s string) bool {
 	return strings.HasPrefix(s, numberPrefix)
 }
+
+func isPseudoInstr(op Op) bool {
+	return PseudoOpcodes[op]
+}

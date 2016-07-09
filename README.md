@@ -174,7 +174,8 @@ All operations take at least 2 argument. The first argument (`dst`=destination) 
 
 # TODO
 
-* Add conditional-execution tests
-* Add assembler tests
-* Rewrite memory implementation. Current memory model is temporarily.
-* Implement a proper stack mechanism. Current call stack is temporarily.
+- [ ] Add conditional-execution tests
+- [ ] Add assembler tests
+- [x] Rewrite memory implementation. Current memory model is temporarily.
+- [ ] Implement a proper stack mechanism. Current call stack is temporarily.
+- [ ] Add `pc`, `lr` and `sp` syntatic sugar (pc = r15, lr = r14, sp = r13)
