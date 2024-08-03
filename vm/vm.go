@@ -284,7 +284,7 @@ func (vm *VM) Stats() {
 			if r == 0 {
 				str += "."
 			} else if unicode.IsPrint(rune(r)) {
-				str += fmt.Sprintf("%s", string(r))
+				str += string(r)
 			} else {
 				str += "?"
 			}

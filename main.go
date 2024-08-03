@@ -18,7 +18,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/obscuren/tinyvm/asm"
@@ -30,6 +29,7 @@ var (
 	statFlag    = flag.Bool("vmstats", false, "display virtual machine stats")
 	printCode   = flag.Bool("printcode", false, "prints executing code in hex")
 	debug       = flag.Bool("debug", false, "prints debug information during execution")
+	assemble    = flag.Bool("assemble", false, "assembles the given .asm to an object file")
 )
 
 func main() {
@@ -46,19 +46,39 @@ func main() {
 	)
 	if len(flag.Args()) > 0 {
 		var err error
-		code, err = ioutil.ReadFile(flag.Args()[0])
+		code, err = os.ReadFile(flag.Args()[0])
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
+
 		code, err = asm.Assemble(string(code))
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		if *assemble {
+			outPath := "out.obj"
+			if (len(flag.Args()) > 1) {
+				outPath = flag.Args()[1]
+			}
+			if err := os.WriteFile(outPath, code, 0o600); err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			fmt.Printf("%s file successfully assembled: %s\n", flag.Args()[0], outPath)
+			os.Exit(0)
+		}
 	} else {
-		err = fmt.Errorf("Usage: tinyvm <flags> filename")
+		err = fmt.Errorf("usage: tinyvm <flags> filename")
 	}
+
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
 	if *printCode {
 		fmt.Printf("(len=%d) %x\n", len(code), code)
 		for i := 0; i < len(code); i += 4 {
@@ -79,6 +99,7 @@ func main() {
 		fmt.Println("err", err)
 		os.Exit(1)
 	}
+
 	if *statFlag {
 		v.Stats()
 	}

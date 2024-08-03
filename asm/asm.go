@@ -18,7 +18,6 @@ const (
 // assembler contains the necessary fields to compile a
 // successful tinyvm program.
 type assembler struct {
-	parsedCode []byte
 	labels     map[string]int
 	setLabels  map[int]string
 	pc         int
@@ -115,8 +114,8 @@ func (a assembler) parseInstrs(args []string) ([]Instruction, error) {
 			}
 
 			instructions = []Instruction{
-				Instruction{Op: Sub, Dst: SP, Ops1: SP, Immediate: true, Value: 1},
-				Instruction{Op: Stm, Mode: DataTransfer, Dst: RegEntry(dst), Ops1: SP},
+				{Op: Sub, Dst: SP, Ops1: SP, Immediate: true, Value: 1},
+				{Op: Stm, Mode: DataTransfer, Dst: RegEntry(dst), Ops1: SP},
 			}
 		case Pop:
 			if len(args) != 1 {
@@ -131,13 +130,12 @@ func (a assembler) parseInstrs(args []string) ([]Instruction, error) {
 			}
 
 			instructions = []Instruction{
-				Instruction{Op: Ldm, Mode: DataTransfer, Dst: RegEntry(dst), Ops1: SP},
-				Instruction{Op: Add, Dst: SP, Ops1: SP, Immediate: true, Value: 1},
+				{Op: Ldm, Mode: DataTransfer, Dst: RegEntry(dst), Ops1: SP},
+				{Op: Add, Dst: SP, Ops1: SP, Immediate: true, Value: 1},
 			}
 		}
 	} else {
-		var instr Instruction
-		instr = Instruction{
+		instr := Instruction{
 			Cond: cond,
 			Op:   op,
 			S:    s,
