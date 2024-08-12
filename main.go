@@ -60,7 +60,7 @@ func main() {
 
 		if *assemble {
 			outPath := "out.obj"
-			if (len(flag.Args()) > 1) {
+			if len(flag.Args()) > 1 {
 				outPath = flag.Args()[1]
 			}
 			if err := os.WriteFile(outPath, code, 0o600); err != nil {

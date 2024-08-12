@@ -1,5 +1,5 @@
 	mov 	r15 main
-add:    ; add taket two arguments
+add:    ; add takes two arguments
 	add 	r0 r0 r1
 	ret
 

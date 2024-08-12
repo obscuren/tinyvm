@@ -18,9 +18,9 @@ const (
 // assembler contains the necessary fields to compile a
 // successful tinyvm program.
 type assembler struct {
-	labels     map[string]int
-	setLabels  map[int]string
-	pc         int
+	labels    map[string]int
+	setLabels map[int]string
+	pc        int
 }
 
 // Assemble takes code as input and returns the compiled binary code
