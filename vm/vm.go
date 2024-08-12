@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"strings"
 	"unicode"
 
 	"github.com/obscuren/tinyvm/asm"
@@ -104,7 +105,7 @@ func getOps1(vm *VM, instr asm.Instruction) uint32 {
 // program as well as the return value.
 func (vm *VM) Exec(code []byte) error {
 	var (
-		callStack        []uint32               // call stack
+		callStack        = newStack()           // call stack
 		instrPos         = vm.registers[15] * 4 // instruction to read
 		conditionalValue int32                  // condition value used by conditional instructions
 	)
@@ -119,7 +120,11 @@ func (vm *VM) Exec(code []byte) error {
 		if vm.debug {
 			fmt.Printf("instruction: %032b\n", instr.Raw)
 			fmt.Printf("state: cv=%d\n", conditionalValue)
-			fmt.Printf("cond= %s m=%v op=%s (pc=%d) dst=r%v ops1=r%d ops2=r%d I=%v S=%v value=%v\n", instr.Cond, instr.Mode, instr.Op, pc, instr.Dst, instr.Ops1, instr.Ops2, instr.Immediate, instr.S, instr.Value)
+			fmt.Printf("cond= %s m=%v op=%s (pc=%d) dst=r%v ops1=r%d ops2=r%d I=%v S=%v value=%v\n",
+				instr.Cond, instr.Mode, instr.Op, pc, instr.Dst, instr.Ops1, instr.Ops2,
+				instr.Immediate, instr.S, instr.Value)
+
+			callStack.dump()
 		}
 
 		// boolean determining whether we should skip the instruction
@@ -235,14 +240,13 @@ func (vm *VM) Exec(code []byte) error {
 			case asm.Branching:
 				switch instr.Op {
 				case asm.Call:
-					callStack = append(callStack, pc+1)
+					callStack.push(pc + 1)
 					vm.Set(asm.Reg, uint32(asm.R15), instr.Value)
 				case asm.Ret:
-					if len(callStack) == 0 {
+					if callStack.len() == 0 {
 						return nil
 					}
-					pc = callStack[len(callStack)-1]
-					callStack = callStack[:len(callStack)-1]
+					pc = callStack.pop()
 				}
 			}
 			// set conditional value if S is set
@@ -279,17 +283,17 @@ func (vm *VM) Stats() {
 		binary.Write(buff, binary.BigEndian, value)
 		fmt.Printf("%04d: % x  ", addr, buff.Bytes())
 
-		var str string
+		var str strings.Builder
 		for _, r := range buff.Bytes() {
 			if r == 0 {
-				str += "."
+				str.WriteString(".")
 			} else if unicode.IsPrint(rune(r)) {
-				str += string(r)
+				str.WriteByte(r)
 			} else {
-				str += "?"
+				str.WriteString("?")
 			}
 		}
-		fmt.Println(str)
+		fmt.Println(str.String())
 	}
 
 	fmt.Println()

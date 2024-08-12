@@ -12,9 +12,9 @@ To install the TinyVM binary please make sure you've got Go properly set up, the
 ### Usage
 
 Basic: `tinyvm <flags> file`. TinyVM allows you to set the registers from the command line using the
-`-r#`. Where `#` is the register number (0 to 15). Please take extra care when setting register 15.
+`--r#`. Where `#` is the register number (0 to 15). Please take extra care when setting register 15.
 This register is used for the program counter and allows you to control the flow of execution. Please
-refer to the `-help` option for more information.
+refer to the `--help` option for more information.
 
 ## Assembler
 
@@ -38,7 +38,7 @@ the compiler who does not yet emit label information during the assembly stage o
 
 ## Conditional execution
 
-TinyVM supports (like ARM) conditional execution e.g. `moveq` would only be executed if the
+TinyVM supports Arm like conditional execution e.g. `moveq` would only be executed if the
 conditional value were to be set to zero. The conditional value can be set by appending `s`
 to the mnemonic (e.g. `movs`, which sets the 25th bit) or by using the comparison instructions
 `cmp` and `tst`. By default data processing instructions do not set the condition code flag.
@@ -177,5 +177,5 @@ All operations take at least 2 argument. The first argument (`dst`=destination) 
 - [ ] Add conditional-execution tests
 - [ ] Add assembler tests
 - [x] Rewrite memory implementation. Current memory model is temporarily.
-- [ ] Implement a proper stack mechanism. Current call stack is temporarily.
+- [x] Implement a proper stack mechanism. Current call stack is temporarily.
 - [ ] Add `pc`, `lr` and `sp` syntatic sugar (pc = r15, lr = r14, sp = r13)
